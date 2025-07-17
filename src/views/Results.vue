@@ -2,25 +2,24 @@
   <div class="min-h-screen py-8 px-4">
     <div class="max-w-6xl mx-auto">
       <!-- Loading State -->
-      <div v-if="isLoading" class="flex flex-col items-center justify-center py-20">
-        <div class="w-20 h-20 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
-        <p class="mt-6 text-lg text-gray-700 dark:text-gray-300">Analyzing your taste profile...</p>
+      <div v-if="isLoading" class="flex flex-col items-center justify-center py-20 animate-fade-in">
+        <LoadingSpinner 
+          size="xl" 
+          text="Analyzing your taste profile" 
+          subtext="Our AI is processing your preferences and finding personalized recommendations..."
+        />
       </div>
       
       <!-- Error State -->
-      <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center max-w-xl mx-auto">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-red-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <h2 class="text-xl font-semibold text-red-700 dark:text-red-400 mb-2">Something went wrong</h2>
-        <p class="text-red-600 dark:text-red-300 mb-4">{{ error }}</p>
-        <button 
-          @click="goBack" 
-          class="px-4 py-2 bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-200 rounded-lg hover:bg-red-200 dark:hover:bg-red-700 transition-colors"
-        >
-          Try Again
-        </button>
-      </div>
+      <ErrorState 
+        v-else-if="error"
+        title="Something went wrong"
+        :message="error"
+        retryText="Try Again"
+        backText="Go Home"
+        @retry="goBack"
+        @back="router.push('/')"
+      />
       
       <!-- Results Content -->
       <div v-else class="animate-fade-in">
@@ -37,30 +36,31 @@
             </div>
             
             <div class="flex gap-3">
-              <button 
+              <BaseButton 
                 @click="saveTasteProfile" 
-                class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors flex items-center gap-2"
+                variant="secondary"
+                :loading="isSaving"
                 :disabled="isSaving"
               >
-                <svg v-if="isSaving" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                </svg>
+                <template #icon-left v-if="!isSaving">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                  </svg>
+                </template>
                 {{ isSaving ? 'Saving...' : 'Save Profile' }}
-              </button>
+              </BaseButton>
               
-              <button 
+              <BaseButton 
                 @click="shareProfile" 
-                class="px-4 py-2 bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 border border-primary-200 dark:border-primary-800 rounded-lg hover:bg-primary-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                variant="outline"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                </svg>
+                <template #icon-left>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                  </svg>
+                </template>
                 Share
-              </button>
+              </BaseButton>
             </div>
           </div>
           
@@ -101,19 +101,20 @@
         </div>
         
         <!-- Recommendations Tabs -->
-        <div class="mb-8">
-          <div class="flex overflow-x-auto space-x-2 pb-2">
+        <div class="mb-8 animate-slide-in-bottom delay-300">
+          <div class="flex overflow-x-auto space-x-2 pb-2 scrollbar-hide">
             <button 
               v-for="(_, category) in recommendations" 
               :key="category"
               @click="activeCategory = category"
-              class="px-4 py-2 rounded-lg whitespace-nowrap font-medium transition-colors"
+              class="px-4 py-2 rounded-lg whitespace-nowrap font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center gap-2"
               :class="[
                 activeCategory === category 
-                  ? `bg-taste-${category} text-white` 
-                  : `bg-white dark:bg-dark-card text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800`
+                  ? `bg-taste-${category} text-white shadow-lg` 
+                  : `bg-white dark:bg-dark-card text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700`
               ]"
             >
+              <span class="w-3 h-3 rounded-full" :class="`bg-taste-${category}/80`"></span>
               {{ category.charAt(0).toUpperCase() + category.slice(1) }}
             </button>
           </div>
@@ -121,21 +122,49 @@
         
         <!-- Recommendations Grid -->
         <div v-if="activeCategory && recommendations[activeCategory]?.length" class="animate-fade-in">
-          <h2 class="text-2xl font-display font-semibold text-gray-900 dark:text-white mb-6">
-            {{ activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1) }} Recommendations
-          </h2>
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-display font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <span class="w-4 h-4 rounded-full" :class="`bg-taste-${activeCategory}`"></span>
+              {{ activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1) }} Recommendations
+            </h2>
+            
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-gray-600 dark:text-gray-400">View:</span>
+              <button 
+                @click="viewMode = 'grid'"
+                class="p-2 rounded-md transition-colors"
+                :class="viewMode === 'grid' ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+              </button>
+              <button 
+                @click="viewMode = 'list'"
+                class="p-2 rounded-md transition-colors"
+                :class="viewMode === 'list' ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            </div>
+          </div>
           
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Grid View -->
+          <div v-if="viewMode === 'grid'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <div 
               v-for="(item, index) in recommendations[activeCategory]" 
               :key="index"
-              class="bg-white dark:bg-dark-card rounded-xl overflow-hidden shadow-card-light dark:shadow-card-dark border border-gray-100 dark:border-dark-border hover:shadow-taste transition-all duration-300"
+              class="bg-white dark:bg-dark-card rounded-xl overflow-hidden shadow-card-light dark:shadow-card-dark border border-gray-100 dark:border-dark-border hover:shadow-taste transition-all duration-300 transform hover:-translate-y-1 animate-slide-in-bottom"
+              :style="{ animationDelay: `${index * 100}ms` }"
             >
               <div class="h-48 bg-gray-200 dark:bg-gray-700 relative">
                 <img 
                   :src="item.image || `https://source.unsplash.com/random/400x300?${activeCategory},${item.name}`" 
                   :alt="item.name"
                   class="w-full h-full object-cover"
+                  loading="lazy"
                 />
                 <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                 <div class="absolute bottom-0 left-0 p-4">
@@ -153,12 +182,82 @@
                 <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ item.description }}</p>
                 
                 <div class="mt-4 flex justify-between items-center">
-                  <span class="text-xs text-gray-500 dark:text-gray-400">{{ item.category }}</span>
+                  <span class="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">{{ item.category }}</span>
+                  <div class="flex gap-2">
+                    <button 
+                      class="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 text-sm font-medium flex items-center gap-1"
+                      @click="saveRecommendation(item)"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                      </svg>
+                      Save
+                    </button>
+                    <button 
+                      class="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm font-medium flex items-center gap-1"
+                      @click="shareRecommendation(item)"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- List View -->
+          <div v-else class="space-y-4">
+            <div 
+              v-for="(item, index) in recommendations[activeCategory]" 
+              :key="index"
+              class="bg-white dark:bg-dark-card rounded-xl overflow-hidden shadow-card-light dark:shadow-card-dark border border-gray-100 dark:border-dark-border hover:shadow-taste transition-all duration-300 flex animate-slide-in-bottom"
+              :style="{ animationDelay: `${index * 100}ms` }"
+            >
+              <div class="w-24 sm:w-40 bg-gray-200 dark:bg-gray-700 relative">
+                <img 
+                  :src="item.image || `https://source.unsplash.com/random/400x300?${activeCategory},${item.name}`" 
+                  :alt="item.name"
+                  class="w-full h-full object-cover"
+                  loading="lazy"
+                />
+                <div class="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent"></div>
+                <div class="absolute bottom-0 left-0 p-2">
+                  <span 
+                    class="px-2 py-1 text-xs font-medium rounded-full"
+                    :class="`bg-taste-${activeCategory}/90 text-white`"
+                  >
+                    {{ item.match }}%
+                  </span>
+                </div>
+              </div>
+              
+              <div class="p-4 flex-1">
+                <div class="flex justify-between items-start">
+                  <h3 class="font-semibold text-lg text-gray-900 dark:text-white">{{ item.name }}</h3>
+                  <span class="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">{{ item.category }}</span>
+                </div>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ item.description }}</p>
+                
+                <div class="mt-4 flex justify-end gap-3">
                   <button 
-                    class="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 text-sm font-medium"
+                    class="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 text-sm font-medium flex items-center gap-1"
                     @click="saveRecommendation(item)"
                   >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                    </svg>
                     Save
+                  </button>
+                  <button 
+                    class="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm font-medium flex items-center gap-1"
+                    @click="shareRecommendation(item)"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                    </svg>
+                    Share
                   </button>
                 </div>
               </div>
@@ -166,8 +265,16 @@
           </div>
         </div>
         
-        <div v-else-if="activeCategory" class="text-center py-12">
-          <p class="text-gray-600 dark:text-gray-400">No recommendations found for this category.</p>
+        <div v-else-if="activeCategory" class="text-center py-12 animate-fade-in">
+          <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">No Recommendations Found</h3>
+          <p class="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+            We couldn't find any recommendations for this category. Try exploring other categories or updating your taste profile.
+          </p>
         </div>
       </div>
     </div>
@@ -179,6 +286,9 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useTasteStore } from '../stores/taste';
 import TasteDnaChart from '../components/TasteDnaChart.vue';
+import BaseButton from '../components/BaseButton.vue';
+import LoadingSpinner from '../components/LoadingSpinner.vue';
+import ErrorState from '../components/ErrorState.vue';
 
 const router = useRouter();
 const tasteStore = useTasteStore();
@@ -187,6 +297,7 @@ const isLoading = ref(false);
 const error = ref(null);
 const isSaving = ref(false);
 const activeCategory = ref('');
+const viewMode = ref('grid'); // 'grid' or 'list' view mode
 
 // Get data from the store
 const tasteInput = computed(() => tasteStore.tasteInput);
@@ -212,15 +323,20 @@ function goBack() {
   router.push('/');
 }
 
+import { useNotification } from '../composables/useNotification';
+
+const notification = useNotification();
+
 // Function to save the taste profile
 async function saveTasteProfile() {
   isSaving.value = true;
   
   try {
     await tasteStore.saveTasteProfile();
-    // Show success notification or feedback
+    notification.success('Profile Saved', 'Your taste profile has been saved successfully.');
   } catch (err) {
     error.value = 'Failed to save your taste profile. Please try again.';
+    notification.error('Save Failed', 'Could not save your taste profile. Please try again.');
   } finally {
     isSaving.value = false;
   }
@@ -235,10 +351,17 @@ function shareProfile() {
       title: 'My TastePulse Profile',
       text: `Check out my taste profile on TastePulse: ${tasteInput.value}`,
       url: window.location.href
+    }).then(() => {
+      notification.success('Shared Successfully', 'Your profile has been shared.');
+    }).catch(err => {
+      if (err.name !== 'AbortError') {
+        notification.error('Share Failed', 'Could not share your profile.');
+        console.error('Error sharing:', err);
+      }
     });
   } else {
     // Fallback for browsers that don't support Web Share API
-    // Could copy a link to clipboard
+    // Copy a link to clipboard
     const dummyInput = document.createElement('input');
     document.body.appendChild(dummyInput);
     dummyInput.value = window.location.href;
@@ -246,13 +369,50 @@ function shareProfile() {
     document.execCommand('copy');
     document.body.removeChild(dummyInput);
     
-    alert('Link copied to clipboard!');
+    notification.info('Link Copied', 'Profile link copied to clipboard!');
   }
 }
 
 // Function to save a specific recommendation
 function saveRecommendation(item) {
   tasteStore.saveRecommendation(item);
-  // Show success notification
+  notification.success('Recommendation Saved', `"${item.name}" has been saved to your collection.`);
+}
+
+// Function to share a specific recommendation
+function shareRecommendation(item) {
+  const shareText = `Check out this ${activeCategory.value} recommendation from TastePulse: ${item.name} - ${item.description}`;
+  const shareUrl = window.location.href;
+  
+  if (navigator.share) {
+    navigator.share({
+      title: `TastePulse ${activeCategory.value.charAt(0).toUpperCase() + activeCategory.value.slice(1)} Recommendation`,
+      text: shareText,
+      url: shareUrl
+    }).then(() => {
+      notification.success('Shared Successfully', 'Your recommendation has been shared.');
+    }).catch(err => {
+      if (err.name !== 'AbortError') {
+        notification.error('Share Failed', 'Could not share this recommendation.');
+        console.error('Error sharing:', err);
+        // Fallback to clipboard if sharing fails
+        copyToClipboard(shareText + ' ' + shareUrl);
+      }
+    });
+  } else {
+    // Fallback to clipboard copy
+    copyToClipboard(shareText + ' ' + shareUrl);
+    notification.info('Link Copied', 'Recommendation copied to clipboard!');
+  }
+}
+
+// Helper function to copy text to clipboard
+function copyToClipboard(text) {
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand('copy');
+  document.body.removeChild(textarea);
 }
 </script>

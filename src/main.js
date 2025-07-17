@@ -19,8 +19,20 @@ const router = createRouter({
 // Create Pinia store
 const pinia = createPinia();
 
-// Create and mount the Vue application
+// Create the Vue application
 const app = createApp(App);
+
+// Use plugins
 app.use(pinia);
 app.use(router);
-app.mount('#app');
+
+// Set up global notification manager
+app.config.globalProperties.$notificationManager = null;
+app.provide('notificationManager', null);
+
+// Mount the app
+const vueApp = app.mount('#app');
+
+// Set the notification manager after the app is mounted
+app.config.globalProperties.$notificationManager = vueApp.$refs.notificationManager;
+app.provide('notificationManager', vueApp.$refs.notificationManager);

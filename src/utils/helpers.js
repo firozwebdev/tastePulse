@@ -1,9 +1,9 @@
 // Date formatting utilities
 export function formatDate(date, options = {}) {
   if (!date) return 'Unknown date';
-  
+
   const dateObj = typeof date === 'string' ? new Date(date) : date;
-  
+
   const defaultOptions = {
     year: 'numeric',
     month: 'short',
@@ -11,22 +11,22 @@ export function formatDate(date, options = {}) {
     hour: '2-digit',
     minute: '2-digit'
   };
-  
+
   return new Intl.DateTimeFormat('en-US', { ...defaultOptions, ...options }).format(dateObj);
 }
 
 export function formatRelativeTime(date) {
   if (!date) return 'Unknown time';
-  
+
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
   const diffInSeconds = Math.floor((now - dateObj) / 1000);
-  
+
   if (diffInSeconds < 60) return 'Just now';
   if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
   if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
   if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)} days ago`;
-  
+
   return formatDate(dateObj, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
@@ -56,19 +56,19 @@ export function slugify(text) {
 // Language detection utilities
 export function detectLanguage(text) {
   if (!text) return 'unknown';
-  
+
   // Bengali script detection
-  if (/[ক-ঔা-ৃে-ৈো-ৌ]/.test(text)) return 'bengali';
-  
+  if (/[\u0980-\u09FF]/.test(text)) return 'bengali';
+
   // Spanish character detection
   if (/[áéíóúüñ¿¡]/.test(text)) return 'spanish';
-  
+
   // Arabic script detection
   if (/[\u0600-\u06FF]/.test(text)) return 'arabic';
-  
+
   // Chinese/Japanese characters
   if (/[\u4e00-\u9fff]/.test(text)) return 'cjk';
-  
+
   // Default to English
   return 'english';
 }
@@ -82,7 +82,7 @@ export function getLanguageName(langCode) {
     cjk: '中文/日本語',
     unknown: 'Unknown'
   };
-  
+
   return languages[langCode] || languages.unknown;
 }
 
@@ -96,7 +96,7 @@ export function getCategoryColor(category) {
     fashion: '#ec4899',
     brand: '#6366f1'
   };
-  
+
   return colors[category] || '#6b7280';
 }
 
@@ -109,7 +109,7 @@ export function getCategoryIcon(category) {
     fashion: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
     brand: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z'
   };
-  
+
   return icons[category] || 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
 }
 

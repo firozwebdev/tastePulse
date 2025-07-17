@@ -9,9 +9,13 @@
       
       <!-- Inner pulse -->
       <div 
-        class="absolute inset-0 rounded-full bg-primary-100 dark:bg-primary-900/30 animate-pulse-slow"
-        :class="innerSize"
-      ></div>
+        class="absolute inset-0 flex items-center justify-center"
+      >
+        <div 
+          class="bg-white dark:bg-dark-bg rounded-full animate-pulse"
+          :class="innerSize"
+        ></div>
+      </div>
     </div>
     
     <!-- Loading text -->
@@ -57,10 +61,10 @@ const spinnerSize = computed(() => {
 
 const innerSize = computed(() => {
   const sizes = {
-    sm: 'w-6 h-6 m-1',
-    md: 'w-8 h-8 m-2',
-    lg: 'w-12 h-12 m-2',
-    xl: 'w-16 h-16 m-2'
+    sm: 'w-4 h-4',
+    md: 'w-6 h-6',
+    lg: 'w-8 h-8',
+    xl: 'w-10 h-10'
   };
   return sizes[props.size];
 });
