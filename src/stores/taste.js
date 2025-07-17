@@ -1,0 +1,724 @@
+import { defineStore } from 'pinia';
+import { ref, computed } from 'vue';
+import { createClient } from '@supabase/supabase-js';
+
+// Initialize Supabase client
+// In a real app, these would be environment variables
+const supabaseUrl = 'https://your-supabase-url.supabase.co';
+const supabaseKey = 'your-supabase-key';
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+export const useTasteStore = defineStore('taste', () => {
+  // State
+  const tasteInput = ref('');
+  const parsedTaste = ref({});
+  const recommendations = ref({});
+  const isAuthenticated = ref(false);
+  const user = ref(null);
+  const savedProfiles = ref([]);
+  const savedRecommendations = ref([]);
+  
+  // Mock function to simulate GPT parsing
+  async function parseWithGPT(input) {
+    // In a real app, this would call an API endpoint
+    console.log('Parsing input with GPT:', input);
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Mock parsed result based on input
+    let result = {};
+    
+    if (input.toLowerCase().includes('lo-fi') || input.toLowerCase().includes('jazz')) {
+      result.music = input.toLowerCase().includes('lo-fi') ? 'lo-fi beats' : 'jazz';
+    }
+    
+    if (input.toLowerCase().includes('ramen') || input.toLowerCase().includes('cuisine')) {
+      result.food = input.toLowerCase().includes('ramen') ? 'Japanese ramen' : 'Mediterranean cuisine';
+    }
+    
+    if (input.toLowerCase().includes('murakami') || input.toLowerCase().includes('sci-fi')) {
+      result.book = input.toLowerCase().includes('murakami') ? 'Murakami novels' : 'Science fiction';
+    }
+    
+    if (input.toLowerCase().includes('kyoto') || input.toLowerCase().includes('national park')) {
+      result.travel = input.toLowerCase().includes('kyoto') ? 'Kyoto, Japan' : 'National parks';
+    }
+    
+    // Bengali input detection
+    if (input.includes('রবীন্দ্রসঙ্গীত')) {
+      result.music = 'রবীন্দ্রসঙ্গীত';
+    }
+    
+    if (input.includes('ইলিশ')) {
+      result.food = 'ইলিশ মাছ';
+    }
+    
+    if (input.includes('কবিতা')) {
+      result.book = 'বাংলা কবিতা';
+    }
+    
+    if (input.includes('দার্জিলিং')) {
+      result.travel = 'দার্জিলিং';
+    }
+    
+    // Spanish input detection
+    if (input.includes('flamenca')) {
+      result.music = 'música flamenca';
+    }
+    
+    if (input.includes('paella')) {
+      result.food = 'paella';
+    }
+    
+    if (input.includes('García Márquez')) {
+      result.book = 'novelas de Gabriel García Márquez';
+    }
+    
+    if (input.includes('playas de España')) {
+      result.travel = 'playas de España';
+    }
+    
+    // If no specific categories were detected, add some defaults based on language
+    if (Object.keys(result).length === 0) {
+      if (/[\u0980-\u09FF]/.test(input)) { // Bengali script detection
+        result = {
+          music: 'বাংলা গান',
+          food: 'বাঙালি খাবার',
+          book: 'বাংলা সাহিত্য',
+          travel: 'বাংলাদেশ'
+        };
+      } else if (/[áéíóúüñ¿¡]/.test(input)) { // Spanish character detection
+        result = {
+          music: 'música latina',
+          food: 'cocina española',
+          book: 'literatura española',
+          travel: 'España'
+        };
+      } else {
+        result = {
+          music: 'indie pop',
+          food: 'fusion cuisine',
+          book: 'contemporary fiction',
+          travel: 'urban exploration'
+        };
+      }
+    }
+    
+    return result;
+  }
+  
+  // Mock function to simulate Qloo API recommendations
+  async function getQlooRecommendations(parsedTaste) {
+    // In a real app, this would call the Qloo API
+    console.log('Getting recommendations from Qloo:', parsedTaste);
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Generate mock recommendations based on parsed taste
+    const mockRecommendations = {};
+    
+    if (parsedTaste.music) {
+      mockRecommendations.music = generateMusicRecommendations(parsedTaste.music);
+    }
+    
+    if (parsedTaste.food) {
+      mockRecommendations.food = generateFoodRecommendations(parsedTaste.food);
+    }
+    
+    if (parsedTaste.book) {
+      mockRecommendations.book = generateBookRecommendations(parsedTaste.book);
+    }
+    
+    if (parsedTaste.travel) {
+      mockRecommendations.travel = generateTravelRecommendations(parsedTaste.travel);
+    }
+    
+    return mockRecommendations;
+  }
+  
+  // Helper functions to generate mock recommendations
+  function generateMusicRecommendations(musicTaste) {
+    const recommendations = [
+      {
+        name: 'Nujabes',
+        description: 'Japanese hip-hop producer and DJ, known for jazzy, atmospheric beats',
+        category: 'Artist',
+        match: 95,
+        image: 'https://source.unsplash.com/random/400x300?music,lofi'
+      },
+      {
+        name: 'Chillhop Essentials',
+        description: 'A curated playlist of the best lo-fi and chillhop tracks',
+        category: 'Playlist',
+        match: 92,
+        image: 'https://source.unsplash.com/random/400x300?playlist,music'
+      },
+      {
+        name: 'Tycho',
+        description: 'American ambient music project led by Scott Hansen',
+        category: 'Artist',
+        match: 88,
+        image: 'https://source.unsplash.com/random/400x300?ambient,music'
+      },
+      {
+        name: 'Bonobo',
+        description: 'British musician, producer and DJ Simon Green',
+        category: 'Artist',
+        match: 85,
+        image: 'https://source.unsplash.com/random/400x300?electronic,music'
+      },
+      {
+        name: 'Studio Ghibli Lo-Fi',
+        description: 'Lo-fi remixes of Studio Ghibli soundtrack classics',
+        category: 'Album',
+        match: 82,
+        image: 'https://source.unsplash.com/random/400x300?japan,music'
+      },
+      {
+        name: 'Emancipator',
+        description: 'American electronic music producer from Portland, Oregon',
+        category: 'Artist',
+        match: 80,
+        image: 'https://source.unsplash.com/random/400x300?electronic,beats'
+      }
+    ];
+    
+    // Filter or modify based on specific taste
+    if (musicTaste.includes('রবীন্দ্রসঙ্গীত')) {
+      return [
+        {
+          name: 'Rabindra Sangeet Modern Covers',
+          description: 'Contemporary interpretations of classic Tagore songs',
+          category: 'Playlist',
+          match: 96,
+          image: 'https://source.unsplash.com/random/400x300?india,music'
+        },
+        {
+          name: 'Somlata Acharyya Chowdhury',
+          description: 'Bengali singer known for her Rabindra Sangeet performances',
+          category: 'Artist',
+          match: 94,
+          image: 'https://source.unsplash.com/random/400x300?singer,indian'
+        },
+        {
+          name: 'Kaushiki Chakraborty',
+          description: 'Renowned Indian classical vocalist',
+          category: 'Artist',
+          match: 90,
+          image: 'https://source.unsplash.com/random/400x300?classical,indian'
+        },
+        {
+          name: 'Tagore & Beyond',
+          description: 'Fusion of Rabindra Sangeet with contemporary styles',
+          category: 'Album',
+          match: 87,
+          image: 'https://source.unsplash.com/random/400x300?fusion,music'
+        }
+      ];
+    }
+    
+    if (musicTaste.includes('flamenca')) {
+      return [
+        {
+          name: 'Paco de Lucía',
+          description: 'Spanish virtuoso flamenco guitarist, composer and producer',
+          category: 'Artist',
+          match: 97,
+          image: 'https://source.unsplash.com/random/400x300?guitar,flamenco'
+        },
+        {
+          name: 'Camarón de la Isla',
+          description: 'Legendary flamenco vocalist',
+          category: 'Artist',
+          match: 95,
+          image: 'https://source.unsplash.com/random/400x300?spain,singer'
+        },
+        {
+          name: 'Flamenco Passion',
+          description: 'Collection of the most emotional flamenco performances',
+          category: 'Playlist',
+          match: 92,
+          image: 'https://source.unsplash.com/random/400x300?dance,spain'
+        },
+        {
+          name: 'Estrella Morente',
+          description: 'Spanish flamenco singer from a renowned flamenco family',
+          category: 'Artist',
+          match: 89,
+          image: 'https://source.unsplash.com/random/400x300?flamenco,woman'
+        }
+      ];
+    }
+    
+    return recommendations;
+  }
+  
+  function generateFoodRecommendations(foodTaste) {
+    const recommendations = [
+      {
+        name: 'Ichiran Ramen',
+        description: 'Famous Japanese ramen chain known for tonkotsu broth',
+        category: 'Restaurant',
+        match: 96,
+        image: 'https://source.unsplash.com/random/400x300?ramen,japanese'
+      },
+      {
+        name: 'Homemade Ramen Guide',
+        description: 'Step-by-step guide to making authentic ramen at home',
+        category: 'Recipe',
+        match: 93,
+        image: 'https://source.unsplash.com/random/400x300?cooking,ramen'
+      },
+      {
+        name: 'Tsukemen',
+        description: 'Dipping ramen - noodles served separately from the broth',
+        category: 'Dish',
+        match: 90,
+        image: 'https://source.unsplash.com/random/400x300?noodles,japanese'
+      },
+      {
+        name: 'Yakitori',
+        description: 'Japanese skewered chicken, pairs well with ramen',
+        category: 'Dish',
+        match: 87,
+        image: 'https://source.unsplash.com/random/400x300?skewer,japanese'
+      },
+      {
+        name: 'Sake Pairing Guide',
+        description: 'How to pair different types of sake with ramen',
+        category: 'Guide',
+        match: 84,
+        image: 'https://source.unsplash.com/random/400x300?sake,drink'
+      },
+      {
+        name: 'Ramen Tour of Tokyo',
+        description: 'Curated guide to the best ramen shops in Tokyo',
+        category: 'Experience',
+        match: 82,
+        image: 'https://source.unsplash.com/random/400x300?tokyo,street'
+      }
+    ];
+    
+    if (foodTaste.includes('ইলিশ')) {
+      return [
+        {
+          name: 'ইলিশ পোলাও',
+          description: 'Traditional Bengali dish of fragrant rice cooked with Hilsa fish',
+          category: 'Recipe',
+          match: 98,
+          image: 'https://source.unsplash.com/random/400x300?rice,fish'
+        },
+        {
+          name: 'শর্ষে ইলিশ',
+          description: 'Hilsa fish cooked in mustard sauce, a Bengali delicacy',
+          category: 'Dish',
+          match: 96,
+          image: 'https://source.unsplash.com/random/400x300?curry,fish'
+        },
+        {
+          name: 'ভাপা ইলিশ',
+          description: 'Steamed Hilsa fish with mustard paste',
+          category: 'Recipe',
+          match: 93,
+          image: 'https://source.unsplash.com/random/400x300?steamed,fish'
+        },
+        {
+          name: 'কোলকাতার বিখ্যাত ইলিশ রেস্টুরেন্ট',
+          description: 'Famous restaurants in Kolkata serving the best Hilsa dishes',
+          category: 'Guide',
+          match: 90,
+          image: 'https://source.unsplash.com/random/400x300?restaurant,india'
+        }
+      ];
+    }
+    
+    if (foodTaste.includes('paella')) {
+      return [
+        {
+          name: 'Paella Valenciana',
+          description: 'Traditional Spanish rice dish with rabbit, chicken and vegetables',
+          category: 'Dish',
+          match: 97,
+          image: 'https://source.unsplash.com/random/400x300?paella,spanish'
+        },
+        {
+          name: 'Seafood Paella',
+          description: 'Coastal variation with various seafood and saffron rice',
+          category: 'Recipe',
+          match: 95,
+          image: 'https://source.unsplash.com/random/400x300?seafood,rice'
+        },
+        {
+          name: 'La Pepica',
+          description: 'Historic restaurant in Valencia known for authentic paella',
+          category: 'Restaurant',
+          match: 92,
+          image: 'https://source.unsplash.com/random/400x300?restaurant,spain'
+        },
+        {
+          name: 'Spanish Tapas Selection',
+          description: 'Small dishes that pair perfectly with paella',
+          category: 'Guide',
+          match: 88,
+          image: 'https://source.unsplash.com/random/400x300?tapas,spanish'
+        }
+      ];
+    }
+    
+    return recommendations;
+  }
+  
+  function generateBookRecommendations(bookTaste) {
+    const recommendations = [
+      {
+        name: 'Norwegian Wood',
+        description: 'Haruki Murakami\'s nostalgic story of loss and sexuality',
+        category: 'Novel',
+        match: 98,
+        image: 'https://source.unsplash.com/random/400x300?book,japan'
+      },
+      {
+        name: 'Kafka on the Shore',
+        description: 'Murakami\'s magical realist novel about a teenage runaway',
+        category: 'Novel',
+        match: 95,
+        image: 'https://source.unsplash.com/random/400x300?book,magical'
+      },
+      {
+        name: 'The Wind-Up Bird Chronicle',
+        description: 'Murakami\'s epic tale of a man\'s search for his missing wife',
+        category: 'Novel',
+        match: 92,
+        image: 'https://source.unsplash.com/random/400x300?book,mystery'
+      },
+      {
+        name: 'After Dark',
+        description: 'Murakami\'s short novel set during one night in Tokyo',
+        category: 'Novel',
+        match: 89,
+        image: 'https://source.unsplash.com/random/400x300?night,tokyo'
+      },
+      {
+        name: 'Colorless Tsukuru Tazaki',
+        description: 'Murakami\'s novel about a man dealing with being rejected by his friends',
+        category: 'Novel',
+        match: 86,
+        image: 'https://source.unsplash.com/random/400x300?train,japan'
+      },
+      {
+        name: 'The Memory Police',
+        description: 'Yoko Ogawa\'s dystopian novel about memory and loss',
+        category: 'Novel',
+        match: 83,
+        image: 'https://source.unsplash.com/random/400x300?dystopia,book'
+      }
+    ];
+    
+    if (bookTaste.includes('কবিতা')) {
+      return [
+        {
+          name: 'গীতাঞ্জলি',
+          description: 'Rabindranath Tagore\'s Nobel Prize-winning collection of poems',
+          category: 'Poetry',
+          match: 97,
+          image: 'https://source.unsplash.com/random/400x300?poetry,nobel'
+        },
+        {
+          name: 'শেষের কবিতা',
+          description: 'One of Tagore\'s most celebrated works',
+          category: 'Novel/Poetry',
+          match: 94,
+          image: 'https://source.unsplash.com/random/400x300?poetry,bengali'
+        },
+        {
+          name: 'কাজী নজরুল ইসলামের কবিতা সংকলন',
+          description: 'Collection of poems by the rebel poet Kazi Nazrul Islam',
+          category: 'Poetry',
+          match: 91,
+          image: 'https://source.unsplash.com/random/400x300?rebel,poetry'
+        },
+        {
+          name: 'আধুনিক বাংলা কবিতা',
+          description: 'Anthology of modern Bengali poetry',
+          category: 'Poetry Collection',
+          match: 88,
+          image: 'https://source.unsplash.com/random/400x300?modern,poetry'
+        }
+      ];
+    }
+    
+    if (bookTaste.includes('García Márquez')) {
+      return [
+        {
+          name: 'Cien años de soledad',
+          description: 'One Hundred Years of Solitude - García Márquez\'s masterpiece',
+          category: 'Novel',
+          match: 99,
+          image: 'https://source.unsplash.com/random/400x300?magical,book'
+        },
+        {
+          name: 'El amor en los tiempos del cólera',
+          description: 'Love in the Time of Cholera - A story of love and patience',
+          category: 'Novel',
+          match: 96,
+          image: 'https://source.unsplash.com/random/400x300?love,book'
+        },
+        {
+          name: 'Crónica de una muerte anunciada',
+          description: 'Chronicle of a Death Foretold - Novella by García Márquez',
+          category: 'Novella',
+          match: 93,
+          image: 'https://source.unsplash.com/random/400x300?death,book'
+        },
+        {
+          name: 'Isabel Allende - La casa de los espíritus',
+          description: 'The House of the Spirits - Similar magical realism style',
+          category: 'Novel',
+          match: 90,
+          image: 'https://source.unsplash.com/random/400x300?spirits,book'
+        }
+      ];
+    }
+    
+    return recommendations;
+  }
+  
+  function generateTravelRecommendations(travelTaste) {
+    const recommendations = [
+      {
+        name: 'Fushimi Inari Shrine',
+        description: 'Famous shrine with thousands of vermilion torii gates in Kyoto',
+        category: 'Attraction',
+        match: 97,
+        image: 'https://source.unsplash.com/random/400x300?kyoto,shrine'
+      },
+      {
+        name: 'Arashiyama Bamboo Grove',
+        description: 'Stunning bamboo forest path in western Kyoto',
+        category: 'Nature',
+        match: 94,
+        image: 'https://source.unsplash.com/random/400x300?bamboo,kyoto'
+      },
+      {
+        name: 'Gion District',
+        description: 'Kyoto\'s famous geisha district with traditional wooden machiya houses',
+        category: 'District',
+        match: 91,
+        image: 'https://source.unsplash.com/random/400x300?geisha,kyoto'
+      },
+      {
+        name: 'Philosopher\'s Path',
+        description: 'Stone path following a canal lined with cherry trees in Kyoto',
+        category: 'Walk',
+        match: 88,
+        image: 'https://source.unsplash.com/random/400x300?cherry,blossom'
+      },
+      {
+        name: 'Kinkaku-ji (Golden Pavilion)',
+        description: 'Zen Buddhist temple covered in gold leaf in Kyoto',
+        category: 'Temple',
+        match: 85,
+        image: 'https://source.unsplash.com/random/400x300?temple,gold'
+      },
+      {
+        name: 'Hidden Cafes of Kyoto',
+        description: 'Guide to the best secluded cafes in Kyoto\'s back streets',
+        category: 'Guide',
+        match: 82,
+        image: 'https://source.unsplash.com/random/400x300?cafe,japan'
+      }
+    ];
+    
+    if (travelTaste.includes('দার্জিলিং')) {
+      return [
+        {
+          name: 'টাইগার হিল',
+          description: 'Tiger Hill - Famous for stunning sunrise views of the Himalayas',
+          category: 'Viewpoint',
+          match: 96,
+          image: 'https://source.unsplash.com/random/400x300?sunrise,mountains'
+        },
+        {
+          name: 'দার্জিলিং হিমালয়ান রেলওয়ে',
+          description: 'Darjeeling Himalayan Railway - UNESCO World Heritage toy train',
+          category: 'Experience',
+          match: 94,
+          image: 'https://source.unsplash.com/random/400x300?train,mountain'
+        },
+        {
+          name: 'চা বাগান ভ্রমণ',
+          description: 'Tea garden tours in Darjeeling\'s famous estates',
+          category: 'Tour',
+          match: 91,
+          image: 'https://source.unsplash.com/random/400x300?tea,plantation'
+        },
+        {
+          name: 'কাঞ্চনজঙ্ঘা দর্শন',
+          description: 'Views of Kanchenjunga, the world\'s third highest mountain',
+          category: 'Nature',
+          match: 89,
+          image: 'https://source.unsplash.com/random/400x300?himalaya,peak'
+        }
+      ];
+    }
+    
+    if (travelTaste.includes('playas de España')) {
+      return [
+        {
+          name: 'Playa de Las Catedrales',
+          description: 'Beach of the Cathedrals - Famous for its natural rock arches',
+          category: 'Beach',
+          match: 98,
+          image: 'https://source.unsplash.com/random/400x300?beach,arch'
+        },
+        {
+          name: 'Cala Macarella',
+          description: 'Stunning turquoise cove beach in Menorca',
+          category: 'Beach',
+          match: 95,
+          image: 'https://source.unsplash.com/random/400x300?cove,turquoise'
+        },
+        {
+          name: 'Playa de Bolonia',
+          description: 'Beautiful beach with sand dunes in Andalusia',
+          category: 'Beach',
+          match: 92,
+          image: 'https://source.unsplash.com/random/400x300?dunes,beach'
+        },
+        {
+          name: 'Costa del Sol',
+          description: 'Sun Coast - Popular Mediterranean coastal region',
+          category: 'Region',
+          match: 89,
+          image: 'https://source.unsplash.com/random/400x300?spain,coast'
+        }
+      ];
+    }
+    
+    return recommendations;
+  }
+  
+  // Actions
+  async function processTasteInput(input) {
+    tasteInput.value = input;
+    
+    try {
+      // Parse the input with GPT
+      const parsed = await parseWithGPT(input);
+      parsedTaste.value = parsed;
+      
+      // Get recommendations from Qloo
+      const recs = await getQlooRecommendations(parsed);
+      recommendations.value = recs;
+      
+      return { parsed, recommendations: recs };
+    } catch (error) {
+      console.error('Error processing taste input:', error);
+      throw error;
+    }
+  }
+  
+  async function saveTasteProfile() {
+    try {
+      // In a real app, this would save to Supabase
+      console.log('Saving taste profile to Supabase');
+      
+      const profile = {
+        id: Date.now().toString(),
+        tasteInput: tasteInput.value,
+        parsedTaste: parsedTaste.value,
+        recommendations: recommendations.value,
+        createdAt: new Date().toISOString()
+      };
+      
+      // Add to local storage for demo purposes
+      const existingProfiles = JSON.parse(localStorage.getItem('tasteProfiles') || '[]');
+      existingProfiles.push(profile);
+      localStorage.setItem('tasteProfiles', JSON.stringify(existingProfiles));
+      
+      savedProfiles.value = existingProfiles;
+      
+      return profile;
+    } catch (error) {
+      console.error('Error saving taste profile:', error);
+      throw error;
+    }
+  }
+  
+  async function getUserProfiles() {
+    try {
+      // In a real app, this would fetch from Supabase
+      console.log('Fetching user profiles from storage');
+      
+      // Get from local storage for demo purposes
+      const profiles = JSON.parse(localStorage.getItem('tasteProfiles') || '[]');
+      savedProfiles.value = profiles;
+      
+      return profiles;
+    } catch (error) {
+      console.error('Error fetching user profiles:', error);
+      throw error;
+    }
+  }
+  
+  async function deleteProfile(profileId) {
+    try {
+      // In a real app, this would delete from Supabase
+      console.log('Deleting profile:', profileId);
+      
+      // Delete from local storage for demo purposes
+      const existingProfiles = JSON.parse(localStorage.getItem('tasteProfiles') || '[]');
+      const updatedProfiles = existingProfiles.filter(profile => profile.id !== profileId);
+      localStorage.setItem('tasteProfiles', JSON.stringify(updatedProfiles));
+      
+      savedProfiles.value = updatedProfiles;
+      
+      return true;
+    } catch (error) {
+      console.error('Error deleting profile:', error);
+      throw error;
+    }
+  }
+  
+  function loadProfile(profile) {
+    tasteInput.value = profile.tasteInput;
+    parsedTaste.value = profile.parsedTaste;
+    recommendations.value = profile.recommendations;
+  }
+  
+  function saveRecommendation(recommendation) {
+    // In a real app, this would save to Supabase
+    console.log('Saving recommendation:', recommendation);
+    
+    // Add to local storage for demo purposes
+    const existingRecommendations = JSON.parse(localStorage.getItem('savedRecommendations') || '[]');
+    existingRecommendations.push({
+      ...recommendation,
+      savedAt: new Date().toISOString()
+    });
+    localStorage.setItem('savedRecommendations', JSON.stringify(existingRecommendations));
+    
+    savedRecommendations.value = existingRecommendations;
+  }
+  
+  return {
+    // State
+    tasteInput,
+    parsedTaste,
+    recommendations,
+    isAuthenticated,
+    user,
+    savedProfiles,
+    savedRecommendations,
+    
+    // Actions
+    processTasteInput,
+    saveTasteProfile,
+    getUserProfiles,
+    deleteProfile,
+    loadProfile,
+    saveRecommendation
+  };
+});

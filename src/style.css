@@ -5,23 +5,109 @@
 @layer base {
   html {
     font-family: 'Inter', system-ui, sans-serif;
+    scroll-behavior: smooth;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Montserrat', sans-serif;
+  }
+  
+  ::selection {
+    @apply bg-primary-500/30 text-primary-900 dark:text-primary-100;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl;
+    @apply bg-gradient-taste text-white font-medium py-3 px-6 rounded-lg shadow-taste hover:shadow-taste-hover transition-all duration-300;
   }
   
   .btn-secondary {
-    @apply bg-secondary-600 hover:bg-secondary-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl;
+    @apply bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 border border-primary-200 dark:border-primary-800 font-medium py-3 px-6 rounded-lg hover:bg-primary-50 dark:hover:bg-gray-700 transition-colors duration-300;
+  }
+  
+  .btn-outline {
+    @apply border border-primary-500 text-primary-600 dark:text-primary-400 font-medium py-2.5 px-5 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors duration-300;
   }
   
   .card {
-    @apply bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-100;
+    @apply bg-white dark:bg-dark-card rounded-xl shadow-card-light dark:shadow-card-dark border border-gray-100 dark:border-dark-border hover:shadow-taste transition-all duration-300;
   }
   
-  .card-dark {
-    @apply bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-700;
+  .input-field {
+    @apply w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500;
   }
+  
+  .taste-badge {
+    @apply px-3 py-1 rounded-full text-sm font-medium;
+  }
+  
+  .taste-badge-music {
+    @apply bg-taste-music/20 text-taste-music;
+  }
+  
+  .taste-badge-food {
+    @apply bg-taste-food/20 text-taste-food;
+  }
+  
+  .taste-badge-book {
+    @apply bg-taste-book/20 text-taste-book;
+  }
+  
+  .taste-badge-travel {
+    @apply bg-taste-travel/20 text-taste-travel;
+  }
+  
+  .taste-badge-fashion {
+    @apply bg-taste-fashion/20 text-taste-fashion;
+  }
+  
+  .taste-badge-brand {
+    @apply bg-taste-brand/20 text-taste-brand;
+  }
+  
+  .section-title {
+    @apply text-3xl font-display font-bold text-gray-900 dark:text-white mb-6;
+  }
+  
+  .section-subtitle {
+    @apply text-lg text-gray-600 dark:text-gray-400 mb-8 max-w-3xl;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100 dark:bg-gray-800;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 dark:bg-gray-600 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400 dark:bg-gray-500;
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Gradient text */
+.gradient-text {
+  @apply bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent;
 }
