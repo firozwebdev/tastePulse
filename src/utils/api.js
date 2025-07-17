@@ -157,7 +157,8 @@ function generateMockRecommendations(category, taste) {
   const recommendations = baseRecommendations[category] || [];
   return recommendations.map(rec => ({
     ...rec,
-    image: `https://source.unsplash.com/random/400x300?${category},${rec.name.replace(/\s+/g, '+')}`
+    // Use static Unsplash images instead of random API which might be blocked
+    image: `https://images.unsplash.com/photo-${Math.floor(1500000000 + Math.random() * 100000000)}?w=400&h=300&auto=format&fit=crop&q=80`
   }));
 }
 

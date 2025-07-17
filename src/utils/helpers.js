@@ -201,4 +201,17 @@ export function throttle(func, limit) {
       setTimeout(() => inThrottle = false, limit);
     }
   };
+}// Image utilities
+export function getFallbackImage(category) {
+  // Fallback images by category
+  const fallbackImages = {
+    music: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&h=300&auto=format&fit=crop',
+    food: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&auto=format&fit=crop',
+    book: 'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=400&h=300&auto=format&fit=crop',
+    travel: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&auto=format&fit=crop',
+    fashion: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400&h=300&auto=format&fit=crop',
+    brand: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=400&h=300&auto=format&fit=crop'
+  };
+  
+  return fallbackImages[category] || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&h=300&auto=format&fit=crop';
 }

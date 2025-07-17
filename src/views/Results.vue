@@ -161,10 +161,11 @@
             >
               <div class="h-48 bg-gray-200 dark:bg-gray-700 relative">
                 <img 
-                  :src="item.image || `https://source.unsplash.com/random/400x300?${activeCategory},${item.name}`" 
+                  :src="item.image || getFallbackImage(activeCategory)"
                   :alt="item.name"
                   class="w-full h-full object-cover"
                   loading="lazy"
+                  @error="handleImageError($event, activeCategory)"
                 />
                 <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                 <div class="absolute bottom-0 left-0 p-4">
@@ -217,10 +218,11 @@
             >
               <div class="w-24 sm:w-40 bg-gray-200 dark:bg-gray-700 relative">
                 <img 
-                  :src="item.image || `https://source.unsplash.com/random/400x300?${activeCategory},${item.name}`" 
+                  :src="item.image || getFallbackImage(activeCategory)" 
                   :alt="item.name"
                   class="w-full h-full object-cover"
                   loading="lazy"
+                  @error="handleImageError($event, activeCategory)"
                 />
                 <div class="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent"></div>
                 <div class="absolute bottom-0 left-0 p-2">
@@ -289,6 +291,7 @@ import TasteDnaChart from '../components/TasteDnaChart.vue';
 import BaseButton from '../components/BaseButton.vue';
 import LoadingSpinner from '../components/LoadingSpinner.vue';
 import ErrorState from '../components/ErrorState.vue';
+import { getFallbackImage } from '../utils/helpers';
 
 const router = useRouter();
 const tasteStore = useTasteStore();
@@ -404,6 +407,12 @@ function shareRecommendation(item) {
     copyToClipboard(shareText + ' ' + shareUrl);
     notification.info('Link Copied', 'Recommendation copied to clipboard!');
   }
+}
+
+// Function to handle image loading errors
+function handleImageError(event, category) {
+  // Replace the broken image with our fallback image
+  event.target.src = getFallbackImage(category);
 }
 
 // Helper function to copy text to clipboard
