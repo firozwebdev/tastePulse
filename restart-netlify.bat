@@ -1,0 +1,6 @@
+@echo off
+echo Stopping any running Netlify processes...
+taskkill /f /im node.exe /fi "WINDOWTITLE eq netlify*" 2>nul
+echo Starting Netlify dev server...
+start cmd /k "netlify dev"
+echo Done!

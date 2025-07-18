@@ -51,17 +51,27 @@ TastePulse is an AI-powered cultural recommendation app that helps users discove
 
 4. Start the development server:
    ```bash
+   # Standard Vite development server (uses mock API)
    npm run dev
    # or
    yarn dev
+   
+   # OR use Netlify Dev to test Edge Functions locally
+   npm run netlify:dev
+   # or
+   yarn netlify:dev
    ```
 
-5. Open your browser and navigate to `http://localhost:3000`
+5. Open your browser and navigate to `http://localhost:8080` (or the URL shown in your terminal)
 
 ## Project Structure
 
 ```
 taste-pulse-app/
+├── netlify/             # Netlify configuration
+│   ├── edge-functions/  # Netlify Edge Functions
+│   │   ├── parse-taste.js       # Gemini API integration
+│   │   └── get-recommendations.js # Qloo API integration
 ├── public/              # Static assets
 ├── src/
 │   ├── assets/          # Images, fonts, etc.
@@ -76,7 +86,9 @@ taste-pulse-app/
 │   ├── main.js          # Entry point
 │   └── style.css        # Global styles
 ├── .env.example         # Example environment variables
+├── .env.development     # Development environment variables
 ├── index.html           # HTML template
+├── netlify.toml         # Netlify configuration
 ├── package.json         # Dependencies and scripts
 ├── postcss.config.js    # PostCSS configuration
 ├── tailwind.config.js   # Tailwind CSS configuration
@@ -92,8 +104,29 @@ The app is configured for easy deployment to Netlify:
 3. Configure the build settings:
    - Build command: `npm run build` or `yarn build`
    - Publish directory: `dist`
-4. Add your environment variables in the Netlify dashboard
+4. Add your environment variables in the Netlify dashboard:
+   - `GEMINI_API_KEY` - Your Google Gemini API key
+   - `QLOO_API_KEY` - Your Qloo API key
+   - `SUPABASE_URL` - Your Supabase project URL
+   - `SUPABASE_ANON_KEY` - Your Supabase anonymous key
 5. Deploy!
+
+### Netlify Edge Functions
+
+This app uses Netlify Edge Functions to securely handle API calls to Gemini and Qloo:
+
+- `/api/parse-taste` - Processes natural language input using Google's Gemini API
+- `/api/recommendations` - Fetches personalized recommendations from the Qloo API
+
+Edge Functions run on Netlify's global network, keeping API keys secure and providing low-latency responses. To test them locally:
+
+```bash
+# Install Netlify CLI if you haven't already
+npm install -g netlify-cli
+
+# Run the local development server with Edge Functions
+npm run netlify:dev
+```
 
 ## Contributing
 

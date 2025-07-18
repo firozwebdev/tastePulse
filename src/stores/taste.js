@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { createClient } from '@supabase/supabase-js';
+import api, { mockApi, apiEndpoints } from '../utils/api';
+import { ENABLE_MOCK_API } from '../config/env';
 
 // Initialize Supabase client
 // In a real app, these would be environment variables
@@ -605,12 +607,38 @@ export const useTasteStore = defineStore('taste', () => {
     tasteInput.value = input;
     
     try {
-      // Parse the input with GPT
-      const parsed = await parseWithGPT(input);
-      parsedTaste.value = parsed;
+      let parsed;
+      let recs;
       
-      // Get recommendations from Qloo
-      const recs = await getQlooRecommendations(parsed);
+      if (ENABLE_MOCK_API) {
+        // Use mock API for development
+        parsed = await parseWithGPT(input);
+        recs = await getQlooRecommendations(parsed);
+      } else {
+        try {
+          // Use real API endpoints (Netlify Edge Functions) for production
+          console.log('Calling parse-taste API endpoint with input:', input);
+          
+          // Parse the input with Gemini via Edge Function
+          const parseResponse = await api.post(apiEndpoints.parseText, { input });
+          console.log('Parse response:', parseResponse.data);
+          parsed = parseResponse.data;
+          
+          // Get recommendations from Qloo via Edge Function
+          console.log('Calling recommendations API endpoint with parsed taste:', parsed);
+          const recsResponse = await api.post(apiEndpoints.getRecommendations, { parsedTaste: parsed });
+          console.log('Recommendations response:', recsResponse.data);
+          recs = recsResponse.data;
+        } catch (apiError) {
+          console.error('API Error:', apiError);
+          // Fallback to mock API if real API fails
+          console.log('Falling back to mock API');
+          parsed = await parseWithGPT(input);
+          recs = await getQlooRecommendations(parsed);
+        }
+      }
+      
+      parsedTaste.value = parsed;
       recommendations.value = recs;
       
       return { parsed, recommendations: recs };

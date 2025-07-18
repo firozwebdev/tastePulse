@@ -1,0 +1,22 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+# Regular function for parsing taste input with Gemini
+[[redirects]]
+  from = "/api/parse-taste"
+  to = "/.netlify/functions/parse-taste"
+  status = 200
+
+# Regular function for getting recommendations from Qloo
+[[redirects]]
+  from = "/api/recommendations"
+  to = "/.netlify/functions/get-recommendations"
+  status = 200
+
+# Redirect all other paths to index.html for SPA routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

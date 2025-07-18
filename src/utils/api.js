@@ -35,7 +35,7 @@ api.interceptors.response.use(
       localStorage.removeItem('auth_token');
       // Could redirect to login page here
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -44,15 +44,15 @@ api.interceptors.response.use(
 export const apiEndpoints = {
   // GPT/AI endpoints
   parseText: '/api/parse-taste',
-  
+
   // Qloo endpoints
   getRecommendations: '/api/recommendations',
-  
+
   // User endpoints
   saveProfile: '/api/profiles',
   getProfiles: '/api/profiles',
   deleteProfile: (id) => `/api/profiles/${id}`,
-  
+
   // Similar profiles
   getSimilarProfiles: '/api/profiles/similar'
 };
@@ -62,64 +62,73 @@ export const mockApi = {
   async parseText(text) {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1500));
-    
+
     // Mock GPT parsing logic
     const result = {};
-    
+
     // English patterns
     if (text.toLowerCase().includes('lo-fi') || text.toLowerCase().includes('jazz')) {
       result.music = text.toLowerCase().includes('lo-fi') ? 'lo-fi beats' : 'jazz';
     }
-    
+
     if (text.toLowerCase().includes('ramen') || text.toLowerCase().includes('cuisine')) {
       result.food = text.toLowerCase().includes('ramen') ? 'Japanese ramen' : 'Mediterranean cuisine';
     }
-    
+
     if (text.toLowerCase().includes('murakami') || text.toLowerCase().includes('sci-fi')) {
       result.book = text.toLowerCase().includes('murakami') ? 'Murakami novels' : 'Science fiction';
     }
-    
+
     if (text.toLowerCase().includes('kyoto') || text.toLowerCase().includes('national park')) {
       result.travel = text.toLowerCase().includes('kyoto') ? 'Kyoto, Japan' : 'National parks';
     }
-    
+
     // Bengali patterns
     if (text.includes('রবীন্দ্রসঙ্গীত')) result.music = 'রবীন্দ্রসঙ্গীত';
     if (text.includes('ইলিশ')) result.food = 'ইলিশ মাছ';
     if (text.includes('কবিতা')) result.book = 'বাংলা কবিতা';
     if (text.includes('দার্জিলিং')) result.travel = 'দার্জিলিং';
-    
+
     // Spanish patterns
     if (text.includes('flamenca')) result.music = 'música flamenca';
     if (text.includes('paella')) result.food = 'paella';
     if (text.includes('García Márquez')) result.book = 'novelas de Gabriel García Márquez';
     if (text.includes('playas de España')) result.travel = 'playas de España';
-    
+
     // Default fallback
     if (Object.keys(result).length === 0) {
-      if (/[ক-ঔা-ৃে-ৈো-ৌ]/.test(text)) {
-        result = { music: 'বাংলা গান', food: 'বাঙালি খাবার', book: 'বাংলা সাহিত্য', travel: 'বাংলাদেশ' };
+      if (/[\u0980-\u09FF]/.test(text)) {
+        result.music = 'বাংলা গান';
+        result.food = 'বাঙালি খাবার';
+        result.book = 'বাংলা সাহিত্য';
+        result.travel = 'বাংলাদেশ';
       } else if (/[áéíóúüñ¿¡]/.test(text)) {
-        result = { music: 'música latina', food: 'cocina española', book: 'literatura española', travel: 'España' };
+        result.music = 'música latina';
+        result.food = 'cocina española';
+        result.book = 'literatura española';
+        result.travel = 'España';
       } else {
-        result = { music: 'indie pop', food: 'fusion cuisine', book: 'contemporary fiction', travel: 'urban exploration' };
+        result.music = 'indie pop';
+        result.food = 'fusion cuisine';
+        result.book = 'contemporary fiction';
+        result.travel = 'urban exploration';
       }
     }
-    
+
     return result;
   },
-  
+
   async getRecommendations(parsedTaste) {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
+
     const recommendations = {};
-    
+
     // Generate mock recommendations for each category
     Object.keys(parsedTaste).forEach(category => {
       recommendations[category] = generateMockRecommendations(category, parsedTaste[category]);
     });
-    
+
     return recommendations;
   }
 };
@@ -152,7 +161,7 @@ function generateMockRecommendations(category, taste) {
       { name: 'Philosopher\'s Path', description: 'Stone path with cherry trees', category: 'Walk', match: 88 }
     ]
   };
-  
+
   // Add images to recommendations
   const recommendations = baseRecommendations[category] || [];
   return recommendations.map(rec => ({
