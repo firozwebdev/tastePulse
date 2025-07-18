@@ -286,22 +286,28 @@ async function getQlooInsightsForEntity(entityId) {
 }
 
 function cleanTasteValue(category, value) {
-  if (!value) return value;
-  switch (category) {
-    case 'music':
-      return value.replace(/\s*music$/i, '').trim();
-    case 'food':
-      return value.replace(/\s*food$/i, '').trim();
-    case 'book':
-      return value.replace(/\s*novels?$/i, '').trim();
-    default:
-      return value;
+  if (!value) return '';
+  if (typeof value === 'string') return value;
+  // If value is an object with arrays, pick the first non-empty array's first value
+  if (typeof value === 'object' && value !== null) {
+    for (const key of Object.keys(value)) {
+      if (Array.isArray(value[key]) && value[key].length > 0) {
+        return value[key][0];
+      }
+    }
   }
+  return '';
 }
 
 async function getQlooRecommendations(parsedTaste) {
   console.log('[Debug] parsedTaste received:', JSON.stringify(parsedTaste));
   const results = {};
+  const categoryMap = {
+    books: 'book',
+    foods: 'food',
+    travels: 'travel',
+    musics: 'music'
+  };
   for (const [category, tasteValue] of Object.entries(parsedTaste)) {
     const cleanedValue = cleanTasteValue(category, tasteValue);
     console.log(`[Debug] Processing category: '${category}', value: '${tasteValue}', cleaned: '${cleanedValue}'`);
@@ -313,16 +319,16 @@ async function getQlooRecommendations(parsedTaste) {
       results[category] = insights;
     } catch (err) {
       console.warn(`[Qloo] Using mock data for category '${category}' (reason: ${err.message})`);
-      const mockArray = generateMockRecommendations({ [category]: tasteValue })[category];
-      // Smart filtering: prioritize the best match for the Gemini output
+      const normalizedCategory = categoryMap[category] || category;
+      const mockArray = generateMockRecommendations({ [normalizedCategory]: tasteValue })[normalizedCategory];
       let match = null;
-      if (cleanedValue) {
+      if (cleanedValue && mockArray) {
         match = mockArray.find(item =>
           item.name.toLowerCase().includes(cleanedValue.toLowerCase()) ||
           (item.description && item.description.toLowerCase().includes(cleanedValue.toLowerCase()))
         );
       }
-      results[category] = match ? [match] : mockArray;
+      results[category] = match ? [match] : (mockArray || []);
       console.log(`[Mock] Data for category '${category}':`, JSON.stringify(results[category]));
     }
   }

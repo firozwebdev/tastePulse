@@ -92,7 +92,7 @@
                   </div>
                   <div>
                     <div class="font-medium text-gray-900 dark:text-white capitalize">{{ category }}</div>
-                    <div class="text-sm text-gray-600 dark:text-gray-400">{{ value }}</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">{{ getTasteSummary(category, value) }}</div>
                   </div>
                 </div>
               </div>
@@ -500,6 +500,22 @@ async function getSurprise() {
   } finally {
     isSurpriseLoading.value = false;
   }
+}
+
+function getTasteSummary(category, value) {
+  if (!value) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object' && value !== null) {
+    // Show all non-empty arrays' values, joined by comma
+    const parts = [];
+    for (const key of Object.keys(value)) {
+      if (Array.isArray(value[key]) && value[key].length > 0) {
+        parts.push(...value[key]);
+      }
+    }
+    return parts.length > 0 ? parts.join(', ') : '';
+  }
+  return '';
 }
 </script>
 

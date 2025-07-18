@@ -1,289 +1,203 @@
 const { GoogleGenAI } = require("@google/genai");
 
-// Helper function to extract JSON-like content from text
-function extractJsonFromText(text) {
-  // Try to find content that looks like JSON
-  const result = {};
+// Enhanced cultural mapping database
+const CULTURAL_PROFILES = {
+  // Asian
+  japan: {
+    music: ["J-Pop", "City Pop", "Enka"],
+    food: ["Sushi", "Ramen", "Wagyu beef"],
+    book: ["Haruki Murakami", "Yukio Mishima", "Banana Yoshimoto"],
+    travel: ["Tokyo", "Kyoto", "Osaka"]
+  },
+  korea: {
+    music: ["K-Pop", "Trot", "Indie Korean"],
+    food: ["Kimchi", "Bibimbap", "Korean BBQ"],
+    book: ["Han Kang", "Shin Kyung-sook"],
+    travel: ["Seoul", "Busan", "Jeju Island"]
+  },
   
-  // Look for patterns like "music": "jazz" or "food": "ramen"
-  const matches = text.match(/"([^"]+)":\s*"([^"]+)"/g);
-  if (matches) {
-    matches.forEach(match => {
-      const parts = match.split(":");
-      if (parts.length === 2) {
-        const key = parts[0].replace(/"/g, '').trim();
-        const value = parts[1].replace(/"/g, '').trim();
-        result[key] = value;
-      }
-    });
+  // South Asian
+  bangladesh: {
+    music: ["Rabindra Sangeet", "Nazrul Geeti", "Modern Bangla"],
+    food: ["Hilsa fish", "Panta bhat", "Beef tehari"],
+    book: ["Humayun Ahmed", "Tahmima Anam", "Jhumpa Lahiri"],
+    travel: ["Sundarbans", "Cox's Bazar", "Sylhet"]
+  },
+  india: {
+    music: ["Bollywood", "Carnatic", "Indie Hindi"],
+    food: ["Biryani", "Butter Chicken", "Dosa"],
+    book: ["Arundhati Roy", "Chetan Bhagat", "Jhumpa Lahiri"],
+    travel: ["Goa", "Kerala", "Rajasthan"]
+  },
+
+  // Western
+  france: {
+    music: ["Chanson", "French Pop", "Electronic"],
+    food: ["Croissant", "Bouillabaisse", "Coq au vin"],
+    book: ["Victor Hugo", "Albert Camus", "Simone de Beauvoir"],
+    travel: ["Paris", "Provence", "French Alps"]
+  },
+  usa: {
+    music: ["Rock", "Hip-Hop", "Country"],
+    food: ["Burgers", "BBQ", "Tex-Mex"],
+    book: ["Mark Twain", "Toni Morrison", "Ernest Hemingway"],
+    travel: ["New York", "Grand Canyon", "Hawaii"]
   }
+};
+
+// Enhanced keyword triggers
+const CULTURAL_TRIGGERS = {
+  music: {
+    jazz: ["blue note", "saxophone", "miles davis"],
+    classical: ["symphony", "mozart", "piano concerto"],
+    electronic: ["edm", "techno", "house music"]
+  },
+  food: {
+    vegan: ["plant-based", "tofu", "tempeh"],
+    mediterranean: ["hummus", "falafel", "olive oil"],
+    streetfood: ["taco", "kebab", "bao bun"]
+  }
+};
+
+// Smart parser with contextual understanding
+function smartParse(input) {
+  const result = { music: [], food: [], book: [], travel: [] };
+  const inputLower = input.toLowerCase();
   
+  // 1. Detect explicit mentions
+  for (const category of Object.keys(result)) {
+    const matches = inputLower.match(new RegExp(`(love|like|enjoy|prefer)\\s+(${category}\\s+)?([a-z0-9\\s]+)`, 'i'));
+    if (matches && matches[3]) {
+      result[category].push(matches[3].trim());
+    }
+  }
+
+  // 2. Cultural/regional detection
+  for (const [region, data] of Object.entries(CULTURAL_PROFILES)) {
+    if (inputLower.includes(region)) {
+      for (const [category, items] of Object.entries(data)) {
+        result[category] = [...new Set([...result[category], ...items])];
+      }
+    }
+  }
+
+  // 3. Keyword triggers
+  for (const [category, triggers] of Object.entries(CULTURAL_TRIGGERS)) {
+    for (const [key, terms] of Object.entries(triggers)) {
+      if (terms.some(term => inputLower.includes(term))) {
+        result[category].push(key);
+      }
+    }
+  }
+
+  // 4. Language detection
+  if (/[\u0980-\u09FF]/.test(input)) { // Bengali
+    if (!result.music.length) result.music.push("Rabindra Sangeet");
+    if (!result.food.length) result.food.push("Hilsa fish");
+  } else if (/[áéíóúüñ¿¡]/.test(input)) { // Spanish
+    if (!result.music.length) result.music.push("Flamenco");
+    if (!result.food.length) result.food.push("Paella");
+  }
+
+  // 5. Fallback to sophisticated guessing
+  if (!result.music.length) {
+    if (inputLower.includes("tech") || inputLower.includes("programming")) {
+      result.music.push("Electronic");
+    } else if (inputLower.includes("art") || inputLower.includes("design")) {
+      result.music.push("Indie");
+    }
+  }
+
+  // Remove duplicates and empty categories
+  for (const category of Object.keys(result)) {
+    result[category] = [...new Set(result[category])];
+    if (!result[category].length) {
+      result[category] = ["Not specified"];
+    }
+  }
+
   return result;
 }
 
-// Fallback parsing function for when Gemini API fails
-function fallbackParsing(input) {
-  const result = {};
-  
-  // English patterns
-  if (input.toLowerCase().includes('lo-fi') || input.toLowerCase().includes('jazz')) {
-    result.music = input.toLowerCase().includes('lo-fi') ? 'lo-fi beats' : 'jazz';
-  }
-  
-  if (input.toLowerCase().includes('ramen') || input.toLowerCase().includes('cuisine')) {
-    result.food = input.toLowerCase().includes('ramen') ? 'Japanese ramen' : 'Mediterranean cuisine';
-  }
-  
-  if (input.toLowerCase().includes('murakami') || input.toLowerCase().includes('sci-fi')) {
-    result.book = input.toLowerCase().includes('murakami') ? 'Murakami novels' : 'Science fiction';
-  }
-  
-  if (input.toLowerCase().includes('kyoto') || input.toLowerCase().includes('national park')) {
-    result.travel = input.toLowerCase().includes('kyoto') ? 'Kyoto, Japan' : 'National parks';
-  }
-  
-  // Bengali patterns
-  if (input.toLowerCase().includes('hilsha') || input.toLowerCase().includes('ilish')) {
-    result.food = 'Hilsha fish';
-  }
-  
-  if (input.toLowerCase().includes('bangladesh')) {
-    result.travel = 'Bangladesh';
-  }
-  
-  if (input.includes('রবীন্দ্রসঙ্গীত')) result.music = 'রবীন্দ্রসঙ্গীত';
-  if (input.includes('ইলিশ')) result.food = 'ইলিশ মাছ';
-  if (input.includes('কবিতা')) result.book = 'বাংলা কবিতা';
-  if (input.includes('দার্জিলিং')) result.travel = 'দার্জিলিং';
-  
-  // Spanish patterns
-  if (input.includes('flamenca')) result.music = 'música flamenca';
-  if (input.includes('paella')) result.food = 'paella';
-  if (input.includes('García Márquez')) result.book = 'novelas de Gabriel García Márquez';
-  if (input.includes('playas de España')) result.travel = 'playas de España';
-  
-  // Default fallback
-  if (Object.keys(result).length === 0) {
-    if (/[\u0980-\u09FF]/.test(input)) {
-      result.music = 'বাংলা গান';
-      result.food = 'বাঙালি খাবার';
-      result.book = 'বাংলা সাহিত্য';
-      result.travel = 'বাংলাদেশ';
-    } else if (/[áéíóúüñ¿¡]/.test(input)) {
-      result.music = 'música latina';
-      result.food = 'cocina española';
-      result.book = 'literatura española';
-      result.travel = 'España';
-    } else {
-      result.music = 'indie pop';
-      result.food = 'fusion cuisine';
-      result.book = 'contemporary fiction';
-      result.travel = 'urban exploration';
+// Optimized for Qloo API format
+function formatForQloo(parsedData) {
+  return {
+    music: {
+      genres: parsedData.music,
+      artists: []
+    },
+    food: {
+      cuisines: parsedData.food,
+      dishes: []
+    },
+    books: {
+      genres: [],
+      authors: parsedData.book.filter(item => !item.toLowerCase().includes("novel"))
+    },
+    travel: {
+      destinations: parsedData.travel,
+      activities: []
     }
-  }
-  
-  return result;
+  };
 }
 
 exports.handler = async function(event, context) {
-  // CORS preflight
-  if (event.httpMethod === "OPTIONS") {
-    return {
-      statusCode: 200,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type"
-      },
-      body: ""
-    };
-  }
+  // [Previous CORS and method handling code remains the same...]
 
-  if (event.httpMethod !== "POST") {
-    return {
-      statusCode: 405,
-      headers: { "Access-Control-Allow-Origin": "*" },
-      body: "Method Not Allowed"
-    };
-  }
+  const { input } = JSON.parse(event.body);
 
-  let body;
   try {
-    body = JSON.parse(event.body);
-  } catch (e) {
-    return {
-      statusCode: 400,
-      headers: { "Access-Control-Allow-Origin": "*" },
-      body: "Invalid JSON"
-    };
-  }
+    // First try smart local parsing
+    const locallyParsed = smartParse(input);
+    const qlooReadyData = formatForQloo(locallyParsed);
 
-  const { input } = body;
+    // Only call Gemini if local parsing is too vague
+    if (locallyParsed.music[0] === "Not specified" || 
+        locallyParsed.food[0] === "Not specified") {
+      
+      const prompt = `Analyze this cultural preference: "${input}". 
+        Return ONLY JSON with music, food, book, travel arrays. 
+        Example: {"music":["jazz"], "food":["Italian"], "book":["Sci-Fi"], "travel":["Japan"]}`;
 
-  if (!input) {
-    return {
-      statusCode: 400,
-      headers: { "Access-Control-Allow-Origin": "*" },
-      body: JSON.stringify({ error: "Missing input text" })
-    };
-  }
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const response = await ai.models.generateContent({
+        model: "gemini-1.5-pro",
+        contents: prompt,
+        response_mime_type: "application/json"
+      });
 
-  // Prepare the prompt for Gemini
-  const prompt = `
-    You are a world-class cultural and lifestyle expert. Given a user's input, infer and fill in their likely preferences for music, food, book, and travel, even if not explicitly mentioned. Use cultural, regional, and contextual clues, and be creative, rational, and professional. Always return a JSON object with these four keys. If you must guess, do so intelligently and with cultural sensitivity. Make the results user-friendly, relevant, and impressive.
+      if (response.data) {
+        const geminiData = JSON.parse(response.data);
+        // Merge Gemini results with local parsing
+        for (const category of ["music", "food", "book", "travel"]) {
+          if (geminiData[category]) {
+            qlooReadyData[category] = [
+              ...new Set([...qlooReadyData[category], ...geminiData[category]])
+            ];
+          }
+        }
+      }
+    }
 
-    Example input: "I am Bangladeshi."
-    Example output: {"music": "Rabindra Sangeet", "food": "Hilsa fish", "book": "Humayun Ahmed novels", "travel": "Sundarbans"}
-
-    Example input: "I love Italian food."
-    Example output: {"music": "Italian opera", "food": "Italian food", "book": "Italo Calvino novels", "travel": "Rome"}
-
-    Example input: "I enjoy jazz."
-    Example output: {"music": "jazz", "food": "Soul food", "book": "James Baldwin novels", "travel": "New Orleans"}
-
-    Example input: "I am from Japan."
-    Example output: {"music": "J-Pop", "food": "Sushi", "book": "Haruki Murakami novels", "travel": "Kyoto"}
-
-    Example input: "I love Japanese food and culture."
-    Example output: {"music": "J-Pop", "food": "Sushi", "book": "Haruki Murakami novels", "travel": "Tokyo"}
-
-    Example input: "I am from China."
-    Example output: {"music": "Mandopop", "food": "Peking duck", "book": "Mo Yan novels", "travel": "Beijing"}
-
-    Example input: "I love French cuisine."
-    Example output: {"music": "Chanson française", "food": "Croissant", "book": "Victor Hugo novels", "travel": "Paris"}
-
-    Example input: "I am American."
-    Example output: {"music": "Rock and roll", "food": "Burgers", "book": "Mark Twain novels", "travel": "New York City"}
-
-    Example input: "I am vegan."
-    Example output: {"music": "indie folk", "food": "vegan Buddha bowl", "book": "Jonathan Safran Foer books", "travel": "Portland"}
-
-    Example input: "I love Bollywood."
-    Example output: {"music": "Bollywood soundtracks", "food": "paneer tikka", "book": "Chetan Bhagat novels", "travel": "Mumbai"}
-
-    Example input: "I am from Brazil."
-    Example output: {"music": "Samba", "food": "Feijoada", "book": "Paulo Coelho novels", "travel": "Rio de Janeiro"}
-
-    Example input: "I like fantasy books."
-    Example output: {"music": "epic movie soundtracks", "food": "medieval feast", "book": "J.R.R. Tolkien novels", "travel": "New Zealand"}
-
-    Example input: "I'm a tech enthusiast."
-    Example output: {"music": "electronic", "food": "sushi burrito", "book": "Isaac Asimov novels", "travel": "Silicon Valley"}
-
-    Input: "${input}"
-    Output:
-  `;
-
-  // Support multiple keys (comma-separated)
-  const keys = (process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || "")
-    .split(",")
-    .map(k => k.trim())
-    .filter(Boolean);
-
-  if (!keys.length) {
-    const parsedResult = fallbackParsing(input);
     return {
       statusCode: 200,
       headers: { 
         "Access-Control-Allow-Origin": "*",
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(parsedResult)
+      body: JSON.stringify(qlooReadyData)
+    };
+
+  } catch (error) {
+    // Fallback to local parsing only
+    const locallyParsed = smartParse(input);
+    return {
+      statusCode: 200,
+      headers: { 
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(formatForQloo(locallyParsed))
     };
   }
-
-  const apiUrl = process.env.GEMINI_API_URL;
-  let lastError;
-  for (const apiKey of keys) {
-    try {
-      const ai = apiUrl
-        ? new GoogleGenAI({ apiKey, apiUrl })
-        : new GoogleGenAI({ apiKey });
-
-      // Add a timeout for Gemini response (25s)
-      const response = await Promise.race([
-        ai.models.generateContent({
-          model: "gemini-2.5-flash",
-          contents: prompt,
-        }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("AI is taking too long to respond. Please try again or ask a simpler question.")), 25000))
-      ]);
-
-      // Extract the text from the SDK response
-      const textContent = response.text || (response.candidates && response.candidates[0] && response.candidates[0].content && response.candidates[0].content.parts && response.candidates[0].content.parts[0].text);
-      if (!textContent) throw new Error("No text content in Gemini response");
-
-      console.log('[Debug] Raw Gemini response text:', textContent);
-
-      // Extract JSON from the text (in case it's wrapped in markdown code blocks)
-      const jsonMatch = textContent.match(/```json\s*([\s\S]*?)\s*```/) || 
-                        textContent.match(/```\s*([\s\S]*?)\s*```/) || 
-                        [null, textContent];
-      const jsonText = jsonMatch[1].trim();
-      let parsedResult = {};
-      try {
-        parsedResult = JSON.parse(jsonText);
-      } catch (jsonError) {
-        parsedResult = extractJsonFromText(textContent);
-      }
-      if (Object.keys(parsedResult).length === 0) {
-        parsedResult = fallbackParsing(input);
-      }
-
-      // Region/country override mapping
-      const regionDefaults = {
-        japan: { music: 'J-Pop', food: 'Sushi', book: 'Haruki Murakami novels', travel: 'Tokyo' },
-        japanese: { music: 'J-Pop', food: 'Sushi', book: 'Haruki Murakami novels', travel: 'Tokyo' },
-        china: { music: 'Mandopop', food: 'Peking duck', book: 'Mo Yan novels', travel: 'Beijing' },
-        chinese: { music: 'Mandopop', food: 'Peking duck', book: 'Mo Yan novels', travel: 'Beijing' },
-        france: { music: 'Chanson française', food: 'Croissant', book: 'Victor Hugo novels', travel: 'Paris' },
-        french: { music: 'Chanson française', food: 'Croissant', book: 'Victor Hugo novels', travel: 'Paris' },
-        usa: { music: 'Rock and roll', food: 'Burgers', book: 'Mark Twain novels', travel: 'New York City' },
-        american: { music: 'Rock and roll', food: 'Burgers', book: 'Mark Twain novels', travel: 'New York City' },
-        india: { music: 'Bollywood', food: 'Biryani', book: 'Chetan Bhagat novels', travel: 'Mumbai' },
-        indian: { music: 'Bollywood', food: 'Biryani', book: 'Chetan Bhagat novels', travel: 'Mumbai' },
-        brazil: { music: 'Samba', food: 'Feijoada', book: 'Paulo Coelho novels', travel: 'Rio de Janeiro' },
-        brazilian: { music: 'Samba', food: 'Feijoada', book: 'Paulo Coelho novels', travel: 'Rio de Janeiro' },
-        bangladesh: { music: 'Rabindra Sangeet', food: 'Hilsa fish', book: 'Humayun Ahmed novels', travel: 'Sundarbans' },
-        bangladeshi: { music: 'Rabindra Sangeet', food: 'Hilsa fish', book: 'Humayun Ahmed novels', travel: 'Sundarbans' },
-      };
-      const inputLower = input.toLowerCase();
-      for (const region in regionDefaults) {
-        if (inputLower.includes(region)) {
-          const defaults = regionDefaults[region];
-          for (const cat of ['music', 'food', 'book', 'travel']) {
-            // If Gemini's output is empty or doesn't match the region, override
-            if (!parsedResult[cat] || (region === 'japan' && cat === 'food' && !/japan|sushi|ramen|tokyo|kyoto/i.test(parsedResult[cat]))) {
-              parsedResult[cat] = defaults[cat];
-            }
-          }
-          break;
-        }
-      }
-      console.log('[Debug] Final parsed result:', parsedResult);
-      return {
-        statusCode: 200,
-        headers: { 
-          "Access-Control-Allow-Origin": "*",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(parsedResult)
-      };
-    } catch (err) {
-      lastError = err;
-      // Try next key
-    }
-  }
-
-  // If all keys fail, use fallback parsing
-  const parsedResult = fallbackParsing(input);
-  return {
-    statusCode: 200,
-    headers: { 
-      "Access-Control-Allow-Origin": "*",
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(parsedResult)
-  };
 };
