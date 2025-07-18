@@ -100,6 +100,24 @@
           </div>
         </div>
         
+        <!-- Add this just before the Recommendations Tabs -->
+        <div class="flex justify-end mb-4">
+          <BaseButton
+            variant="secondary"
+            size="md"
+            @click="getSurprise"
+            :loading="isSurpriseLoading"
+            class="surprise-btn"
+          >
+            <template #icon-left>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </template>
+            Surprise Me!
+          </BaseButton>
+        </div>
+        
         <!-- Recommendations Tabs -->
         <div class="mb-8 animate-slide-in-bottom delay-300">
           <div class="flex overflow-x-auto space-x-2 pb-2 scrollbar-hide">
@@ -278,13 +296,35 @@
             We couldn't find any recommendations for this category. Try exploring other categories or updating your taste profile.
           </p>
         </div>
+        
+        <transition name="fade" mode="out-in">
+          <div v-if="surpriseResults && isSurpriseVisible" class="mb-8 animate-fade-in">
+            <div class="bg-white dark:bg-dark-card rounded-xl shadow-card-light dark:shadow-card-dark border border-gray-100 dark:border-dark-border p-6 md:p-8 relative">
+              <button @click="closeSurprise" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors" aria-label="Close">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              <h2 class="text-2xl font-display font-semibold text-gray-900 dark:text-white mb-4">Surprise Recommendations</h2>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div v-for="(item, category) in surpriseResults" :key="category" class="flex flex-col items-center text-center">
+                  <img :src="item.image" :alt="item.name" class="w-32 h-32 object-cover rounded-lg mb-3 shadow" />
+                  <div class="font-bold text-lg text-gray-900 dark:text-white capitalize">{{ item.name }}</div>
+                  <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">{{ item.description }}</div>
+                  <div class="text-xs text-primary-600 dark:text-primary-400 font-medium mb-1">{{ item.category }}</div>
+                  <div v-if="item.funFact" class="text-xs italic text-gray-500 dark:text-gray-400">💡 {{ item.funFact }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </transition>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useTasteStore } from '../stores/taste';
 import TasteDnaChart from '../components/TasteDnaChart.vue';
@@ -301,6 +341,9 @@ const error = ref(null);
 const isSaving = ref(false);
 const activeCategory = ref('');
 const viewMode = ref('grid'); // 'grid' or 'list' view mode
+const surpriseResults = ref(null);
+const isSurpriseLoading = ref(false);
+const isSurpriseVisible = ref(false);
 
 // Get data from the store
 const tasteInput = computed(() => tasteStore.tasteInput);
@@ -424,4 +467,42 @@ function copyToClipboard(text) {
   document.execCommand('copy');
   document.body.removeChild(textarea);
 }
+
+function closeSurprise() {
+  isSurpriseVisible.value = false;
+  setTimeout(() => {
+    surpriseResults.value = null;
+    notification.info('Surprise Closed', 'Surprise recommendations have been closed.');
+  }, 300); // Match the transition duration
+}
+
+// Auto-hide surprise results if user interacts with recommendations
+watch([activeCategory, viewMode], () => {
+  if (isSurpriseVisible.value) closeSurprise();
+});
+
+async function getSurprise() {
+  isSurpriseLoading.value = true;
+  try {
+    const res = await fetch('/.netlify/functions/surprise-me');
+    if (!res.ok) throw new Error('Failed to fetch surprise recommendations');
+    surpriseResults.value = await res.json();
+    isSurpriseVisible.value = true;
+  } catch (err) {
+    surpriseResults.value = null;
+    isSurpriseVisible.value = false;
+    // Optionally show a notification
+  } finally {
+    isSurpriseLoading.value = false;
+  }
+}
 </script>
+
+<style>
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+</style>

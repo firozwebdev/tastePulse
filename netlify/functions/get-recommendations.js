@@ -69,153 +69,207 @@ function getStaticImageForCategory(category, itemName = '') {
 // Generate mock recommendations
 function generateMockRecommendations(parsedTaste) {
   const mockRecommendations = {};
-  
-  for (const [category, taste] of Object.entries(parsedTaste)) {
+  for (const category of Object.keys(parsedTaste)) {
     switch (category) {
       case "music":
         mockRecommendations.music = [
           {
-            name: "Nujabes",
-            description: "Japanese hip-hop producer known for jazzy beats",
-            category: "Artist",
+            name: "Rabindra Sangeet",
+            description: "Classic Bengali songs by Rabindranath Tagore",
+            category: "Genre",
+            match: 99,
+            funFact: "Rabindra Sangeet is an integral part of Bengali culture.",
+            image: "https://upload.wikimedia.org/wikipedia/commons/6/6e/Rabindra_Sangeet.jpg"
+          },
+          {
+            name: "J-Pop",
+            description: "Popular music from Japan",
+            category: "Genre",
             match: 95,
-            image: getStaticImageForCategory("music", "Nujabes")
+            funFact: "J-Pop is known for its catchy melodies and vibrant performances.",
+            image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&h=300&auto=format&fit=crop"
           },
           {
-            name: "Chillhop Essentials",
-            description: "Curated lo-fi and chillhop playlist",
-            category: "Playlist",
+            name: "Fado",
+            description: "Traditional Portuguese music characterized by its melancholic tunes",
+            category: "Genre",
             match: 92,
-            image: getStaticImageForCategory("music", "Chillhop Essentials")
+            funFact: "Fado is often called the soul of Portuguese music.",
+            image: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=400&h=300&auto=format&fit=crop"
           },
           {
-            name: "Tycho",
-            description: "American ambient music project",
-            category: "Artist",
+            name: "Afrobeat",
+            description: "A fusion of West African musical styles with jazz and funk",
+            category: "Genre",
+            match: 90,
+            funFact: "Afrobeat was pioneered by Nigerian legend Fela Kuti.",
+            image: "https://images.unsplash.com/photo-1464983953574-0892a716854b?w=400&h=300&auto=format&fit=crop"
+          },
+          {
+            name: "Samba",
+            description: "Lively Brazilian music and dance style",
+            category: "Genre",
             match: 88,
-            image: getStaticImageForCategory("music", "Tycho")
-          },
-          {
-            name: "Bonobo",
-            description: "British electronic music producer",
-            category: "Artist",
-            match: 85,
-            image: getStaticImageForCategory("music", "Bonobo")
+            funFact: "Samba is a symbol of Brazilian national identity.",
+            image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=400&h=300&auto=format&fit=crop"
           }
         ];
         break;
       case "food":
         mockRecommendations.food = [
           {
-            name: "Ichiran Ramen",
-            description: "Famous Japanese ramen chain",
-            category: "Restaurant",
-            match: 96,
-            image: getStaticImageForCategory("food", "Ichiran Ramen")
+            name: "Hilsa Fish",
+            description: "A beloved delicacy in Bengali cuisine",
+            category: "Dish",
+            match: 99,
+            funFact: "Hilsa is the national fish of Bangladesh.",
+            image: "https://upload.wikimedia.org/wikipedia/commons/2/2e/Hilsa_fish.jpg"
           },
           {
-            name: "Homemade Ramen Guide",
-            description: "Step-by-step ramen cooking guide",
-            category: "Recipe",
-            match: 93,
-            image: getStaticImageForCategory("food", "Homemade Ramen Guide")
+            name: "Sushi",
+            description: "Iconic Japanese dish of vinegared rice and seafood",
+            category: "Dish",
+            match: 95,
+            funFact: "Sushi is enjoyed worldwide and comes in many varieties.",
+            image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&auto=format&fit=crop"
           },
           {
-            name: "Tsukemen",
-            description: "Dipping ramen style",
+            name: "Feijoada",
+            description: "Hearty Brazilian stew of beans and pork",
+            category: "Dish",
+            match: 92,
+            funFact: "Feijoada is often considered the national dish of Brazil.",
+            image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&auto=format&fit=crop"
+          },
+          {
+            name: "Paella",
+            description: "Spanish rice dish with seafood and saffron",
             category: "Dish",
             match: 90,
-            image: getStaticImageForCategory("food", "Tsukemen")
+            funFact: "Paella originated in Valencia, Spain.",
+            image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&auto=format&fit=crop"
           },
           {
-            name: "Yakitori",
-            description: "Japanese grilled chicken skewers",
+            name: "Pasta Carbonara",
+            description: "Classic Italian pasta with eggs, cheese, and pancetta",
             category: "Dish",
-            match: 87,
-            image: getStaticImageForCategory("food", "Yakitori")
+            match: 88,
+            funFact: "Carbonara is a staple of Roman cuisine.",
+            image: "https://images.unsplash.com/photo-1523987355523-c7b5b0723c6b?w=400&h=300&auto=format&fit=crop"
           }
         ];
         break;
       case "book":
         mockRecommendations.book = [
           {
-            name: "Norwegian Wood",
-            description: "Haruki Murakami's nostalgic novel",
-            category: "Novel",
-            match: 98,
-            image: getStaticImageForCategory("book", "Norwegian Wood")
+            name: "Humayun Ahmed novels",
+            description: "Works by the celebrated Bangladeshi author",
+            category: "Author",
+            match: 99,
+            funFact: "Humayun Ahmed is one of the most popular writers in Bengali literature.",
+            image: "https://upload.wikimedia.org/wikipedia/commons/2/2e/Humayun_Ahmed.jpg"
           },
           {
-            name: "Kafka on the Shore",
-            description: "Magical realist novel by Murakami",
-            category: "Novel",
+            name: "Haruki Murakami novels",
+            description: "Surreal and magical realist works from Japan",
+            category: "Author",
             match: 95,
-            image: getStaticImageForCategory("book", "Kafka on the Shore")
+            funFact: "Murakami's books are translated into over 50 languages.",
+            image: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=300&auto=format&fit=crop"
           },
           {
-            name: "The Wind-Up Bird Chronicle",
-            description: "Epic tale by Murakami",
-            category: "Novel",
+            name: "Gabriel García Márquez novels",
+            description: "Magical realism from Colombia",
+            category: "Author",
             match: 92,
-            image: getStaticImageForCategory("book", "The Wind-Up Bird Chronicle")
+            funFact: "García Márquez won the Nobel Prize in Literature in 1982.",
+            image: "https://images.unsplash.com/photo-1480796927426-f609979314bd?w=400&h=300&auto=format&fit=crop"
           },
           {
-            name: "After Dark",
-            description: "Short novel set in Tokyo",
-            category: "Novel",
-            match: 89,
-            image: getStaticImageForCategory("book", "After Dark")
+            name: "Chinua Achebe novels",
+            description: "Influential Nigerian literature",
+            category: "Author",
+            match: 90,
+            funFact: "Achebe's 'Things Fall Apart' is a classic of African literature.",
+            image: "https://images.unsplash.com/photo-1464983953574-0892a716854b?w=400&h=300&auto=format&fit=crop"
+          },
+          {
+            name: "Jane Austen novels",
+            description: "Timeless English classics",
+            category: "Author",
+            match: 88,
+            funFact: "Jane Austen's works are beloved for their wit and social commentary.",
+            image: "https://images.unsplash.com/photo-1517231925375-bf2cb42917a5?w=400&h=300&auto=format&fit=crop"
           }
         ];
         break;
       case "travel":
         mockRecommendations.travel = [
           {
-            name: "Fushimi Inari Shrine",
-            description: "Famous shrine with torii gates in Kyoto",
-            category: "Attraction",
-            match: 97,
-            image: getStaticImageForCategory("travel", "Fushimi Inari Shrine")
-          },
-          {
-            name: "Arashiyama Bamboo Grove",
-            description: "Stunning bamboo forest in Kyoto",
+            name: "Sundarbans",
+            description: "The world's largest mangrove forest, shared by Bangladesh and India",
             category: "Nature",
-            match: 94,
-            image: getStaticImageForCategory("travel", "Arashiyama Bamboo Grove")
+            match: 99,
+            funFact: "The Sundarbans is home to the famous Royal Bengal Tiger.",
+            image: "https://upload.wikimedia.org/wikipedia/commons/6/6e/Sundarbans.jpg"
           },
           {
-            name: "Gion District",
-            description: "Kyoto's famous geisha district",
-            category: "District",
-            match: 91,
-            image: getStaticImageForCategory("travel", "Gion District")
+            name: "Kyoto",
+            description: "Historic city in Japan known for its temples and cherry blossoms",
+            category: "City",
+            match: 95,
+            funFact: "Kyoto was the capital of Japan for over a thousand years.",
+            image: "https://images.unsplash.com/photo-1522383225653-ed111181a951?w=400&h=300&auto=format&fit=crop"
           },
           {
-            name: "Philosopher's Path",
-            description: "Stone path with cherry trees",
-            category: "Walk",
+            name: "Rio de Janeiro",
+            description: "Vibrant Brazilian city famous for Carnival and beaches",
+            category: "City",
+            match: 92,
+            funFact: "Rio's Christ the Redeemer statue is one of the New Seven Wonders of the World.",
+            image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=400&h=300&auto=format&fit=crop"
+          },
+          {
+            name: "Barcelona",
+            description: "Spanish city known for art, architecture, and cuisine",
+            category: "City",
+            match: 90,
+            funFact: "Barcelona is home to the famous Sagrada Família basilica.",
+            image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&auto=format&fit=crop"
+          },
+          {
+            name: "Cairo",
+            description: "Egypt's capital, gateway to the pyramids",
+            category: "City",
             match: 88,
-            image: getStaticImageForCategory("travel", "Philosopher's Path")
+            funFact: "Cairo is the largest city in the Arab world.",
+            image: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=400&h=300&auto=format&fit=crop"
           }
         ];
         break;
       default:
-        // No mock data for this category
         break;
     }
   }
-  
   return mockRecommendations;
 }
 
-async function searchQlooEntity(entityName) {
+async function searchQlooEntityByName(category, value) {
   const QLOO_API_KEY = process.env.QLOO_API_KEY;
-  const QLOO_API_URL = process.env.QLOO_API_URL || "https://hackathon.api.qloo.com";
-  const url = `${QLOO_API_URL}/entities/search?query=${encodeURIComponent(entityName)}`;
+  const QLOO_API_URL = process.env.QLOO_API_URL || "https://api.qloo.com";
+  // Qloo expects type to be one of their supported types, e.g., 'music', 'food', 'book', 'place', etc.
+  // We'll map our categories to Qloo types where possible.
+  const typeMap = {
+    music: 'music',
+    food: 'food',
+    book: 'book',
+    travel: 'place',
+  };
+  const qlooType = typeMap[category] || '';
+  const url = `${QLOO_API_URL}/entities?query=${encodeURIComponent(value)}${qlooType ? `&type=${qlooType}` : ''}`;
   const options = { method: 'GET', headers: { 'X-Api-Key': QLOO_API_KEY } };
   const response = await fetch(url, options);
-  if (!response.ok) throw new Error(`Qloo search error: ${response.statusText}`);
+  if (!response.ok) throw new Error(`Qloo entity search error: ${response.statusText}`);
   const data = await response.json();
   if (!data.entities || data.entities.length === 0) throw new Error("No Qloo entity found");
   return data.entities[0].id;
@@ -252,7 +306,7 @@ async function getQlooRecommendations(parsedTaste) {
     const cleanedValue = cleanTasteValue(category, tasteValue);
     console.log(`[Debug] Processing category: '${category}', value: '${tasteValue}', cleaned: '${cleanedValue}'`);
     try {
-      const entityId = await searchQlooEntity(cleanedValue);
+      const entityId = await searchQlooEntityByName(category, cleanedValue);
       console.log(`[Qloo] Found entity for category '${category}':`, entityId);
       const insights = await getQlooInsightsForEntity(entityId);
       console.log(`[Qloo] Insights for category '${category}':`, JSON.stringify(insights));
@@ -353,3 +407,5 @@ exports.handler = async function(event) {
     };
   }
 };
+
+exports.generateMockRecommendations = generateMockRecommendations;

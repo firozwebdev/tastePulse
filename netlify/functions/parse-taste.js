@@ -130,13 +130,40 @@ exports.handler = async function(event, context) {
 
   // Prepare the prompt for Gemini
   const prompt = `
-    Parse the following text and extract taste preferences into the following structured categories: music, food, book, travel.
-    Return ONLY a JSON object with these exact keys: music, food, book, travel. If a category is not mentioned, set its value to an empty string.
-    
-    Example input: "I love lo-fi beats and Japanese ramen."
-    Example output: {"music": "lo-fi beats", "food": "Japanese ramen", "book": "", "travel": ""}
-    
+    You are a world-class cultural and lifestyle expert. Given a user's input, infer and fill in their likely preferences for music, food, book, and travel, even if not explicitly mentioned. Use cultural, regional, and contextual clues, and be creative, rational, and professional. Always return a JSON object with these four keys. If you must guess, do so intelligently and with cultural sensitivity. Make the results user-friendly, relevant, and impressive.
+
+    Example input: "I am Bangladeshi."
+    Example output: {"music": "Rabindra Sangeet", "food": "Hilsa fish", "book": "Humayun Ahmed novels", "travel": "Sundarbans"}
+
+    Example input: "I love Italian food."
+    Example output: {"music": "Italian opera", "food": "Italian food", "book": "Italo Calvino novels", "travel": "Rome"}
+
+    Example input: "I enjoy jazz."
+    Example output: {"music": "jazz", "food": "Soul food", "book": "James Baldwin novels", "travel": "New Orleans"}
+
+    Example input: "I am from Japan."
+    Example output: {"music": "J-Pop", "food": "Sushi", "book": "Haruki Murakami novels", "travel": "Kyoto"}
+
+    Example input: "I like science fiction."
+    Example output: {"music": "synthwave", "food": "ramen", "book": "Isaac Asimov novels", "travel": "Tokyo"}
+
+    Example input: "I am vegan."
+    Example output: {"music": "indie folk", "food": "vegan Buddha bowl", "book": "Jonathan Safran Foer books", "travel": "Portland"}
+
+    Example input: "I love Bollywood."
+    Example output: {"music": "Bollywood soundtracks", "food": "paneer tikka", "book": "Chetan Bhagat novels", "travel": "Mumbai"}
+
+    Example input: "I am from Brazil."
+    Example output: {"music": "Samba", "food": "Feijoada", "book": "Paulo Coelho novels", "travel": "Rio de Janeiro"}
+
+    Example input: "I like fantasy books."
+    Example output: {"music": "epic movie soundtracks", "food": "medieval feast", "book": "J.R.R. Tolkien novels", "travel": "New Zealand"}
+
+    Example input: "I'm a tech enthusiast."
+    Example output: {"music": "electronic", "food": "sushi burrito", "book": "Isaac Asimov novels", "travel": "Silicon Valley"}
+
     Input: "${input}"
+    Output:
   `;
 
   // Support multiple keys (comma-separated)
