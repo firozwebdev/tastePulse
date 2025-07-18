@@ -313,9 +313,17 @@ async function getQlooRecommendations(parsedTaste) {
       results[category] = insights;
     } catch (err) {
       console.warn(`[Qloo] Using mock data for category '${category}' (reason: ${err.message})`);
-      const mock = generateMockRecommendations({ [category]: tasteValue })[category];
-      console.log(`[Mock] Data for category '${category}':`, JSON.stringify(mock));
-      results[category] = mock;
+      const mockArray = generateMockRecommendations({ [category]: tasteValue })[category];
+      // Smart filtering: prioritize the best match for the Gemini output
+      let match = null;
+      if (cleanedValue) {
+        match = mockArray.find(item =>
+          item.name.toLowerCase().includes(cleanedValue.toLowerCase()) ||
+          (item.description && item.description.toLowerCase().includes(cleanedValue.toLowerCase()))
+        );
+      }
+      results[category] = match ? [match] : mockArray;
+      console.log(`[Mock] Data for category '${category}':`, JSON.stringify(results[category]));
     }
   }
   console.log('[Final] Aggregated results sent to frontend:', JSON.stringify(results));

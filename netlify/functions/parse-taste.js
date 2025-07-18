@@ -144,8 +144,17 @@ exports.handler = async function(event, context) {
     Example input: "I am from Japan."
     Example output: {"music": "J-Pop", "food": "Sushi", "book": "Haruki Murakami novels", "travel": "Kyoto"}
 
-    Example input: "I like science fiction."
-    Example output: {"music": "synthwave", "food": "ramen", "book": "Isaac Asimov novels", "travel": "Tokyo"}
+    Example input: "I love Japanese food and culture."
+    Example output: {"music": "J-Pop", "food": "Sushi", "book": "Haruki Murakami novels", "travel": "Tokyo"}
+
+    Example input: "I am from China."
+    Example output: {"music": "Mandopop", "food": "Peking duck", "book": "Mo Yan novels", "travel": "Beijing"}
+
+    Example input: "I love French cuisine."
+    Example output: {"music": "Chanson française", "food": "Croissant", "book": "Victor Hugo novels", "travel": "Paris"}
+
+    Example input: "I am American."
+    Example output: {"music": "Rock and roll", "food": "Burgers", "book": "Mark Twain novels", "travel": "New York City"}
 
     Example input: "I am vegan."
     Example output: {"music": "indie folk", "food": "vegan Buddha bowl", "book": "Jonathan Safran Foer books", "travel": "Portland"}
@@ -220,6 +229,37 @@ exports.handler = async function(event, context) {
       }
       if (Object.keys(parsedResult).length === 0) {
         parsedResult = fallbackParsing(input);
+      }
+
+      // Region/country override mapping
+      const regionDefaults = {
+        japan: { music: 'J-Pop', food: 'Sushi', book: 'Haruki Murakami novels', travel: 'Tokyo' },
+        japanese: { music: 'J-Pop', food: 'Sushi', book: 'Haruki Murakami novels', travel: 'Tokyo' },
+        china: { music: 'Mandopop', food: 'Peking duck', book: 'Mo Yan novels', travel: 'Beijing' },
+        chinese: { music: 'Mandopop', food: 'Peking duck', book: 'Mo Yan novels', travel: 'Beijing' },
+        france: { music: 'Chanson française', food: 'Croissant', book: 'Victor Hugo novels', travel: 'Paris' },
+        french: { music: 'Chanson française', food: 'Croissant', book: 'Victor Hugo novels', travel: 'Paris' },
+        usa: { music: 'Rock and roll', food: 'Burgers', book: 'Mark Twain novels', travel: 'New York City' },
+        american: { music: 'Rock and roll', food: 'Burgers', book: 'Mark Twain novels', travel: 'New York City' },
+        india: { music: 'Bollywood', food: 'Biryani', book: 'Chetan Bhagat novels', travel: 'Mumbai' },
+        indian: { music: 'Bollywood', food: 'Biryani', book: 'Chetan Bhagat novels', travel: 'Mumbai' },
+        brazil: { music: 'Samba', food: 'Feijoada', book: 'Paulo Coelho novels', travel: 'Rio de Janeiro' },
+        brazilian: { music: 'Samba', food: 'Feijoada', book: 'Paulo Coelho novels', travel: 'Rio de Janeiro' },
+        bangladesh: { music: 'Rabindra Sangeet', food: 'Hilsa fish', book: 'Humayun Ahmed novels', travel: 'Sundarbans' },
+        bangladeshi: { music: 'Rabindra Sangeet', food: 'Hilsa fish', book: 'Humayun Ahmed novels', travel: 'Sundarbans' },
+      };
+      const inputLower = input.toLowerCase();
+      for (const region in regionDefaults) {
+        if (inputLower.includes(region)) {
+          const defaults = regionDefaults[region];
+          for (const cat of ['music', 'food', 'book', 'travel']) {
+            // If Gemini's output is empty or doesn't match the region, override
+            if (!parsedResult[cat] || (region === 'japan' && cat === 'food' && !/japan|sushi|ramen|tokyo|kyoto/i.test(parsedResult[cat]))) {
+              parsedResult[cat] = defaults[cat];
+            }
+          }
+          break;
+        }
       }
       console.log('[Debug] Final parsed result:', parsedResult);
       return {
