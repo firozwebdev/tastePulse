@@ -298,7 +298,7 @@
         </div>
         
         <transition name="fade" mode="out-in">
-          <div v-if="surpriseResults && isSurpriseVisible" class="mb-8 animate-fade-in">
+          <div v-if="surpriseResults && isSurpriseVisible" class="mb-8 mt-8 animate-fade-in">
             <div class="bg-white dark:bg-dark-card rounded-xl shadow-card-light dark:shadow-card-dark border border-gray-100 dark:border-dark-border p-6 md:p-8 relative">
               <button @click="closeSurprise" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors" aria-label="Close">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -308,7 +308,12 @@
               <h2 class="text-2xl font-display font-semibold text-gray-900 dark:text-white mb-4">Surprise Recommendations</h2>
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div v-for="(item, category) in surpriseResults" :key="category" class="flex flex-col items-center text-center">
-                  <img :src="item.image" :alt="item.name" class="w-32 h-32 object-cover rounded-lg mb-3 shadow" />
+                  <img
+                    :src="item.image || getFallbackImage(category)"
+                    :alt="item.name"
+                    class="w-32 h-32 object-cover rounded-lg mb-3 shadow"
+                    @error="handleImageError($event, category)"
+                  />
                   <div class="font-bold text-lg text-gray-900 dark:text-white capitalize">{{ item.name }}</div>
                   <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">{{ item.description }}</div>
                   <div class="text-xs text-primary-600 dark:text-primary-400 font-medium mb-1">{{ item.category }}</div>
