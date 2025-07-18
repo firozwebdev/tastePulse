@@ -25,15 +25,35 @@
                 v-model="tasteInput"
                 id="taste-input"
                 rows="4"
-                placeholder="Example: I love lo-fi beats, Japanese ramen, Murakami novels, and exploring hidden cafes in Kyoto..."
+                :placeholder="currentExample"
                 :disabled="isLoading"
                 :class="{'shadow-glow': tasteInput.length > 0}"
+                @focus="rotateExamples"
+                @blur="stopRotatingExamples"
               />
               
               <!-- Language indicator -->
               <div v-if="tasteInput.length > 0" class="absolute top-2 right-2 px-2 py-1 text-xs font-medium rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400">
                 {{ detectLanguage(tasteInput) }}
               </div>
+            </div>
+            
+            <!-- Chips -->
+            <div class="flex flex-wrap gap-2 mt-2">
+              <button
+                v-for="chip in suggestionChips"
+                :key="chip"
+                @click.prevent="addChip(chip)"
+                class="px-3 py-1 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 text-xs font-medium hover:bg-primary-200 dark:hover:bg-primary-800 transition"
+                type="button"
+              >
+                {{ chip }}
+              </button>
+            </div>
+            
+            <!-- Input tip -->
+            <div class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              Tell us about your favorite music, foods, books, or places! The more details you share, the more personalized your recommendations will be.
             </div>
             
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
@@ -297,7 +317,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import { useTasteStore } from '../stores/taste';
 import { detectLanguage } from '../utils/helpers';
@@ -316,6 +336,36 @@ const sampleInputs = [
   "I enjoy indie rock music, Mediterranean cuisine, science fiction books, and hiking in national parks.",
   "Me encanta la música flamenca, la paella, las novelas de Gabriel García Márquez y viajar por las playas de España."
 ];
+const currentExample = ref(sampleInputs[0]);
+let exampleInterval = null;
+
+function rotateExamples() {
+  let idx = sampleInputs.indexOf(currentExample.value);
+  exampleInterval = setInterval(() => {
+    idx = (idx + 1) % sampleInputs.length;
+    currentExample.value = sampleInputs[idx];
+  }, 4000);
+}
+
+function stopRotatingExamples() {
+  clearInterval(exampleInterval);
+}
+
+onMounted(() => {
+  rotateExamples();
+});
+onBeforeUnmount(() => {
+  stopRotatingExamples();
+});
+
+const suggestionChips = [
+  "Jazz music", "Sushi", "Murakami novels", "Kyoto", "Vegan", "Bollywood", "Biryani", "Paris", "Fantasy books", "Hiking"
+];
+function addChip(chip) {
+  if (!tasteInput.value.includes(chip)) {
+    tasteInput.value = tasteInput.value.trim() + (tasteInput.value ? ', ' : '') + chip;
+  }
+}
 
 // Function to use a random sample input
 function useSampleInput() {

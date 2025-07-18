@@ -322,11 +322,15 @@ async function getQlooRecommendations(parsedTaste) {
       const normalizedCategory = categoryMap[category] || category;
       const mockArray = generateMockRecommendations({ [normalizedCategory]: tasteValue })[normalizedCategory];
       let match = null;
-      if (cleanedValue && mockArray) {
+      if (cleanedValue && mockArray && cleanedValue.toLowerCase() !== 'not specified') {
         match = mockArray.find(item =>
           item.name.toLowerCase().includes(cleanedValue.toLowerCase()) ||
           (item.description && item.description.toLowerCase().includes(cleanedValue.toLowerCase()))
         );
+      }
+      // If Gemini output is 'Not specified' or empty, pick a random mock
+      if ((!match || cleanedValue.toLowerCase() === 'not specified' || !cleanedValue) && mockArray && mockArray.length > 0) {
+        match = mockArray[Math.floor(Math.random() * mockArray.length)];
       }
       results[category] = match ? [match] : (mockArray || []);
       console.log(`[Mock] Data for category '${category}':`, JSON.stringify(results[category]));
