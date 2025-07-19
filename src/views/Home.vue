@@ -31,30 +31,85 @@
                 @focus="rotateExamples"
                 @blur="stopRotatingExamples"
               />
-              
-              <!-- Language indicator -->
-              <div v-if="tasteInput.length > 0" class="absolute top-2 right-2 px-2 py-1 text-xs font-medium rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400">
-                {{ detectLanguage(tasteInput) }}
+              <div v-if="showSuggestions" class="absolute z-10 w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-lg mt-1 left-0">
+                <div v-for="s in filteredSuggestions" :key="s.label" class="px-4 py-2 cursor-pointer hover:bg-primary-100 dark:hover:bg-primary-900/30 flex items-center gap-2" @mousedown.prevent="selectSuggestion(s)">
+                  <span class="text-xs font-semibold text-primary-600 dark:text-primary-400">{{ s.category }}</span>
+                  <span>{{ s.label }}</span>
+                </div>
               </div>
             </div>
             
-            <!-- Chips -->
-            <div class="flex flex-wrap gap-2 mt-2">
-              <button
-                v-for="chip in suggestionChips"
-                :key="chip"
-                @click.prevent="addChip(chip)"
-                class="px-3 py-1 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 text-xs font-medium hover:bg-primary-200 dark:hover:bg-primary-800 transition"
-                type="button"
-              >
-                {{ chip }}
-              </button>
+            <!-- Quick Suggestions Card -->
+            <div class="bg-white dark:bg-dark-card rounded-xl shadow-card-light dark:shadow-card-dark border border-gray-100 dark:border-dark-border p-4 mt-4 mb-2">
+              <div class="text-sm font-semibold text-primary-600 dark:text-primary-400 mb-3 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Quick Suggestions
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <div v-for="group in suggestionChipGroups" :key="group.label">
+                  <div class="flex items-center gap-2 mb-2 text-xs font-bold text-gray-700 dark:text-gray-200">
+                    <span v-if="group.label === 'Music'">🎵</span>
+                    <span v-else-if="group.label === 'Food'">🍣</span>
+                    <span v-else-if="group.label === 'Books'">📚</span>
+                    <span v-else-if="group.label === 'Travel'">✈️</span>
+                    <span v-else-if="group.label === 'Lifestyle'">🌟</span>
+                    {{ group.label }}
+                  </div>
+                  <div class="flex flex-wrap gap-2">
+                    <button
+                      v-for="chip in group.chips"
+                      :key="chip"
+                      @click.prevent="addChip(chip)"
+                      class="px-3 py-1 rounded-full bg-gradient-to-r from-primary-100 to-primary-200 dark:from-primary-900/30 dark:to-primary-800/30 text-primary-700 dark:text-primary-300 text-xs font-medium hover:scale-105 hover:bg-primary-200 dark:hover:bg-primary-700 transition shadow"
+                      type="button"
+                    >
+                      {{ chip }}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
             
             <!-- Input tip -->
             <div class="text-xs text-gray-500 dark:text-gray-400 mt-2">
               Tell us about your favorite music, foods, books, or places! The more details you share, the more personalized your recommendations will be.
             </div>
+            
+            <div class="flex flex-wrap gap-1 mt-2">
+              <button
+                v-for="emoji in emojiList"
+                :key="emoji"
+                @click.prevent="addEmoji(emoji)"
+                class="text-xl px-2 py-1 rounded hover:bg-primary-100 dark:hover:bg-primary-900/30 transition"
+                type="button"
+                aria-label="Add emoji"
+              >
+                {{ emoji }}
+              </button>
+            </div>
+            
+            <div v-if="inputWarning" class="text-xs text-red-500 dark:text-red-400 mt-2">{{ inputWarning }}</div>
+            <div v-if="detectedCategories.length" class="text-xs text-primary-600 dark:text-primary-400 mt-2 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              Detected: <span v-for="cat in detectedCategories" :key="cat" class="font-semibold mx-1">{{ cat }}</span>
+            </div>
+            
+            <BaseButton
+              type="button"
+              variant="outline"
+              size="md"
+              class="mt-2"
+              @click="feelingLucky"
+            >
+              <template #icon-left>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </template>
+              Feeling Lucky?
+            </BaseButton>
             
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
               <BaseButton
@@ -317,7 +372,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useTasteStore } from '../stores/taste';
 import { detectLanguage } from '../utils/helpers';
@@ -358,8 +413,27 @@ onBeforeUnmount(() => {
   stopRotatingExamples();
 });
 
-const suggestionChips = [
-  "Jazz music", "Sushi", "Murakami novels", "Kyoto", "Vegan", "Bollywood", "Biryani", "Paris", "Fantasy books", "Hiking"
+const suggestionChipGroups = [
+  {
+    label: 'Music',
+    chips: ["Jazz music", "K-Pop", "J-Pop", "Classical", "Bollywood", "Samba"]
+  },
+  {
+    label: 'Food',
+    chips: ["Sushi", "Tacos", "Biryani", "Kimchi", "Croissant", "Burger"]
+  },
+  {
+    label: 'Books',
+    chips: ["Murakami novels", "Jane Austen novels", "Sci-fi books", "Fantasy books", "Paulo Coelho novels"]
+  },
+  {
+    label: 'Travel',
+    chips: ["Kyoto", "Paris", "Rio de Janeiro", "Cairo", "Sydney", "New York City"]
+  },
+  {
+    label: 'Lifestyle',
+    chips: ["Vegan", "Hiking", "Tech enthusiast", "History buff", "Parent"]
+  }
 ];
 function addChip(chip) {
   if (!tasteInput.value.includes(chip)) {
@@ -390,6 +464,105 @@ async function submitTaste() {
     // Handle error (could add error state here)
   } finally {
     isLoading.value = false;
+  }
+}
+
+function feelingLucky() {
+  const idx = Math.floor(Math.random() * sampleInputs.length);
+  tasteInput.value = sampleInputs[idx];
+}
+
+const minInputLength = 10;
+const inputWarning = ref('');
+const detectedCategories = ref([]);
+
+watch(tasteInput, (val) => {
+  // Input validation
+  if (!val || val.trim().length < minInputLength) {
+    inputWarning.value = 'Try mentioning your favorite music, food, book, or a place you love to visit!';
+  } else {
+    inputWarning.value = '';
+  }
+  // Live feedback: detect categories
+  const cats = [];
+  const lower = val.toLowerCase();
+  if (/music|song|band|jazz|pop|k-pop|rock|singer|beat|opera|samba|rabindra|lo-fi|classical|hip-hop|reggae|folk|afrobeat/.test(lower)) cats.push('Music');
+  if (/food|dish|cuisine|sushi|biryani|taco|pizza|ramen|kimchi|duck|burger|croissant|pasta|rice|chow|feijoada|paella|carbonara|jollof|pavlova|hilsa|fish|chicken|beef|vegan|bowl|snack|dessert/.test(lower)) cats.push('Food');
+  if (/book|novel|author|read|murakami|austen|tolkien|sci-fi|fantasy|twain|coelho|hug|mo yan|magical realism|poetry|literature|story|essay|biography|gordimer|esquivel|goethe|gabo|achebe/.test(lower)) cats.push('Books');
+  if (/travel|trip|visit|explore|city|country|paris|kyoto|tokyo|rio|cairo|sydney|beijing|barcelona|new york|cape town|sundarbans|hiking|tour|beach|mountain|festival|adventure|vacation|holiday|tourist|destination/.test(lower)) cats.push('Travel');
+  detectedCategories.value = cats;
+});
+
+const masterSuggestions = [
+  { label: "Jazz", category: "Music" },
+  { label: "K-Pop", category: "Music" },
+  { label: "J-Pop", category: "Music" },
+  { label: "Classical", category: "Music" },
+  { label: "Bollywood", category: "Music" },
+  { label: "Samba", category: "Music" },
+  { label: "Sushi", category: "Food" },
+  { label: "Tacos", category: "Food" },
+  { label: "Biryani", category: "Food" },
+  { label: "Kimchi", category: "Food" },
+  { label: "Croissant", category: "Food" },
+  { label: "Burger", category: "Food" },
+  { label: "Murakami novels", category: "Books" },
+  { label: "Jane Austen novels", category: "Books" },
+  { label: "Sci-fi books", category: "Books" },
+  { label: "Fantasy books", category: "Books" },
+  { label: "Paulo Coelho novels", category: "Books" },
+  { label: "Kyoto", category: "Travel" },
+  { label: "Paris", category: "Travel" },
+  { label: "Rio de Janeiro", category: "Travel" },
+  { label: "Cairo", category: "Travel" },
+  { label: "Sydney", category: "Travel" },
+  { label: "New York City", category: "Travel" },
+  { label: "Vegan", category: "Lifestyle" },
+  { label: "Hiking", category: "Lifestyle" },
+  { label: "Tech enthusiast", category: "Lifestyle" },
+  { label: "History buff", category: "Lifestyle" },
+  { label: "Parent", category: "Lifestyle" }
+];
+const showSuggestions = ref(false);
+const filteredSuggestions = ref([]);
+const suggestionInput = computed(() => tasteInput.value);
+
+watch(suggestionInput, (val) => {
+  if (val && val.length > 1) {
+    const lower = val.toLowerCase();
+    filteredSuggestions.value = masterSuggestions.filter(s =>
+      s.label.toLowerCase().includes(lower)
+    );
+    showSuggestions.value = filteredSuggestions.value.length > 0;
+  } else {
+    showSuggestions.value = false;
+  }
+});
+
+function selectSuggestion(suggestion) {
+  addChip(suggestion.label);
+  showSuggestions.value = false;
+}
+
+const emojiList = [
+  "🎵", "🍣", "📚", "✈️", "🎤", "🍔", "🎸", "🍕", "🏖️", "🏞️", "🎬", "🎨", "🥗", "🧳", "🏛️", "🎧", "🍜", "🗼", "🕌", "🏯", "🌎"
+];
+function addEmoji(emoji) {
+  // Insert emoji at cursor position or at the end
+  const input = document.getElementById('taste-input');
+  if (input && typeof input.selectionStart === 'number') {
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const before = tasteInput.value.slice(0, start);
+    const after = tasteInput.value.slice(end);
+    tasteInput.value = before + emoji + after;
+    // Move cursor after inserted emoji
+    setTimeout(() => {
+      input.selectionStart = input.selectionEnd = start + emoji.length;
+      input.focus();
+    }, 0);
+  } else {
+    tasteInput.value += emoji;
   }
 }
 </script>

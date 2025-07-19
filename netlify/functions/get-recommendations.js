@@ -210,9 +210,59 @@ async function getQlooRecommendations(parsedTaste) {
     travels: 'travel',
     musics: 'music'
   };
+  // Region/culture mapping for fallback
+  const regionDefaults = {
+    bengali: {
+      music: 'Rabindra Sangeet',
+      food: 'Hilsa Fish',
+      book: 'Humayun Ahmed novels',
+      travel: 'Sundarbans'
+    },
+    japanese: {
+      music: 'J-Pop',
+      food: 'Sushi',
+      book: 'Haruki Murakami novels',
+      travel: 'Kyoto'
+    },
+    french: {
+      music: 'Chanson française',
+      food: 'Croissant',
+      book: 'Victor Hugo novels',
+      travel: 'Paris'
+    },
+    brazilian: {
+      music: 'Samba',
+      food: 'Feijoada',
+      book: 'Paulo Coelho novels',
+      travel: 'Rio de Janeiro'
+    },
+    chinese: {
+      music: 'Mandopop',
+      food: 'Peking Duck',
+      book: 'Mo Yan novels',
+      travel: 'Beijing'
+    },
+    // ...add more as needed
+  };
+  // Detect region from specified categories
+  function detectRegion(values) {
+    const v = values.map(x => (typeof x === 'string' ? x : '')).join(' ').toLowerCase();
+    if (/rabindra|hilsa|humayun|sundarbans|bengali|bangladesh/.test(v)) return 'bengali';
+    if (/j-pop|sushi|murakami|kyoto|japan|japanese/.test(v)) return 'japanese';
+    if (/chanson|croissant|hugo|paris|france|french/.test(v)) return 'french';
+    if (/samba|feijoada|coelho|rio|brazil|brazilian/.test(v)) return 'brazilian';
+    if (/mandopop|peking|mo yan|beijing|china|chinese/.test(v)) return 'chinese';
+    return null;
+  }
+  // Gather all cleaned values for region detection
+  const allCleaned = [];
+  for (const [category, tasteValue] of Object.entries(parsedTaste)) {
+    allCleaned.push(cleanTasteValue(category, tasteValue));
+  }
+  const detectedRegion = detectRegion(allCleaned);
   for (const [category, tasteValue] of Object.entries(parsedTaste)) {
     const cleanedValue = cleanTasteValue(category, tasteValue);
-    console.log(`[Debug] Processing category: '${category}', value: '${tasteValue}', cleaned: '${cleanedValue}'`);
+    console.log(`[Debug] Processing category: '${category}', value: '[object Object]', cleaned: '${cleanedValue}'`);
     try {
       const entityId = await searchQlooEntityByName(category, cleanedValue);
       console.log(`[Qloo] Found entity for category '${category}':`, entityId);
@@ -230,7 +280,16 @@ async function getQlooRecommendations(parsedTaste) {
           (item.description && item.description.toLowerCase().includes(cleanedValue.toLowerCase()))
         );
       }
-      // If Gemini output is 'Not specified' or empty, pick a random mock
+      // Region-aware fallback: if not specified, use region default if available
+      if ((!match || cleanedValue.toLowerCase() === 'not specified' || !cleanedValue) && detectedRegion && regionDefaults[detectedRegion]) {
+        const regionDefault = regionDefaults[detectedRegion][normalizedCategory];
+        if (regionDefault && mockArray) {
+          match = mockArray.find(item =>
+            item.name.trim().toLowerCase() === regionDefault.trim().toLowerCase()
+          );
+        }
+      }
+      // If still no match, pick a random mock
       if ((!match || cleanedValue.toLowerCase() === 'not specified' || !cleanedValue) && mockArray && mockArray.length > 0) {
         match = mockArray[Math.floor(Math.random() * mockArray.length)];
       }
