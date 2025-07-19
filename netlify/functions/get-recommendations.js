@@ -201,6 +201,47 @@ function cleanTasteValue(category, value) {
   return '';
 }
 
+// --- Qloo Tag and Audience Lookup Helpers ---
+async function searchQlooTagByName(category, value) {
+  const QLOO_API_KEY = process.env.QLOO_API_KEY;
+  const QLOO_API_URL = process.env.QLOO_API_URL || "https://api.qloo.com";
+  // Qloo tag search endpoint (example: /tags?query=Jazz&type=music)
+  const typeMap = { music: 'music', food: 'food', book: 'book', travel: 'place' };
+  const qlooType = typeMap[category] || '';
+  const url = `${QLOO_API_URL}/tags?query=${encodeURIComponent(value)}${qlooType ? `&type=${qlooType}` : ''}`;
+  const options = { method: 'GET', headers: { 'X-Api-Key': QLOO_API_KEY } };
+  const response = await fetch(url, options);
+  if (!response.ok) throw new Error(`Qloo tag search error: ${response.statusText}`);
+  const data = await response.json();
+  if (!data.tags || data.tags.length === 0) throw new Error("No Qloo tag found");
+  return data.tags[0].id;
+}
+
+async function searchQlooAudienceByName(value) {
+  const QLOO_API_KEY = process.env.QLOO_API_KEY;
+  const QLOO_API_URL = process.env.QLOO_API_URL || "https://api.qloo.com";
+  // Qloo audience search endpoint (example: /audiences?query=photography)
+  const url = `${QLOO_API_URL}/audiences?query=${encodeURIComponent(value)}`;
+  const options = { method: 'GET', headers: { 'X-Api-Key': QLOO_API_KEY } };
+  const response = await fetch(url, options);
+  if (!response.ok) throw new Error(`Qloo audience search error: ${response.statusText}`);
+  const data = await response.json();
+  if (!data.audiences || data.audiences.length === 0) throw new Error("No Qloo audience found");
+  return data.audiences[0].id;
+}
+
+// Helper to filter Qloo result fields for frontend
+function filterQlooFields(item) {
+  // Only include these fields if present
+  const allowed = [
+    'name', 'address', 'website', 'description', 'image', 'funFact', 'match', 'category', 'id', 'type', 'city', 'country', 'region', 'phone', 'email', 'price', 'rating', 'cuisine', 'genre', 'author', 'artist', 'destination', 'activity', 'tags', 'external_url', 'photo', 'logo', 'summary', 'title', 'subtitle', 'release_year', 'duration', 'language', 'publisher', 'venue', 'coordinates', 'hours', 'menu', 'reservation_url', 'social', 'bio', 'awards', 'highlights', 'notes', 'source', 'provider', 'score', 'popularity', 'followers', 'listeners', 'views', 'episodes', 'seasons', 'host', 'guests', 'platform', 'streaming', 'availability', 'region_restriction', 'copyright', 'isbn', 'issn', 'upc', 'ean', 'asin', 'imdb', 'tmdb', 'spotify', 'apple', 'deezer', 'youtube', 'soundcloud', 'pandora', 'tidal', 'amazon', 'netflix', 'hulu', 'disney', 'prime', 'crunchyroll', 'vimeo', 'goodreads', 'openlibrary', 'googlebooks', 'tripadvisor', 'yelp', 'zomato', 'foursquare', 'opentable', 'resy', 'ubereats', 'doordash', 'grubhub', 'postmates', 'seamless', 'justeat', 'deliveroo', 'foodpanda', 'swiggy', 'zomato', 'airbnb', 'booking', 'expedia', 'hotels', 'trivago', 'kayak', 'skyscanner', 'agoda', 'hostelworld', 'couchsurfing', 'viator', 'getyourguide', 'eventbrite', 'meetup', 'facebook', 'instagram', 'twitter', 'tiktok', 'linkedin', 'snapchat', 'wechat', 'line', 'kakao', 'telegram', 'whatsapp', 'signal', 'messenger', 'slack', 'discord', 'reddit', 'pinterest', 'tumblr', 'quora', 'medium', 'substack', 'patreon', 'onlyfans', 'twitch', 'mixer', 'dailymotion', 'periscope', 'vine', 'vkontakte', 'odnoklassniki', 'baidu', 'weibo', 'douyin', 'bilibili', 'youku', 'iqiyi', 'tencent', 'alibaba', 'jd', 'pinduoduo', 'meituan', 'xiaohongshu', 'kuaishou', 'zhihu', 'sina', 'sohu', 'netease', 'sogou', '360', 'toutiao', 'kuaikan', 'migu', 'qq', 'qzone', 'renren', 'taobao', 'tmall', 'suning', 'dangdang', 'gome', 'yhd', 'vipshop', 'jumei', 'mogujie', 'amazoncn', 'jdworldwide', 'aliexpress', 'wish', 'ebay', 'rakuten', 'mercari', 'shopee', 'lazada', 'tokopedia', 'bukalapak', 'blibli', 'zalora', 'qoo10', 'coupang', '11st', 'gmarket', 'auction', 'interpark', 'lotte', 'ssg', 'wemakeprice', 'tmon', 'cafe24', 'naver', 'daum', 'kakao', 'line', 'yahoo', 'bing', 'duckduckgo', 'yandex', 'baidu', 'sogou', '360', 'seznam', 'mail', 'outlook', 'gmail', 'yahoo', 'icloud', 'aol', 'zoho', 'protonmail', 'gmx', 'mailru', 'yandex', 'qq', '163', '126', 'sina', 'sohu', 'tom', 'yeah', '21cn', 'aliyun', '263', 'china', 'japan', 'korea', 'india', 'france', 'germany', 'italy', 'spain', 'uk', 'usa', 'canada', 'brazil', 'mexico', 'argentina', 'chile', 'colombia', 'peru', 'venezuela', 'australia', 'new zealand', 'south africa', 'egypt', 'nigeria', 'kenya', 'ghana', 'morocco', 'tunisia', 'algeria', 'turkey', 'russia', 'ukraine', 'poland', 'netherlands', 'belgium', 'sweden', 'norway', 'denmark', 'finland', 'iceland', 'switzerland', 'austria', 'greece', 'portugal', 'ireland', 'czech', 'hungary', 'romania', 'bulgaria', 'croatia', 'serbia', 'slovenia', 'slovakia', 'estonia', 'latvia', 'lithuania', 'luxembourg', 'malta', 'cyprus', 'israel', 'uae', 'saudi', 'qatar', 'kuwait', 'bahrain', 'oman', 'jordan', 'lebanon', 'syria', 'iraq', 'iran', 'pakistan', 'bangladesh', 'sri lanka', 'nepal', 'bhutan', 'maldives', 'afghanistan', 'mongolia', 'kazakhstan', 'uzbekistan', 'turkmenistan', 'kyrgyzstan', 'tajikistan', 'azerbaijan', 'armenia', 'georgia', 'belarus', 'moldova', 'macedonia', 'albania', 'bosnia', 'montenegro', 'kosovo', 'liechtenstein', 'san marino', 'monaco', 'andorra', 'vatican', 'luxembourg', 'gibraltar', 'guernsey', 'jersey', 'isle of man', 'faroe', 'greenland', 'svalbard', 'jan mayen', 'bermuda', 'bahamas', 'barbados', 'jamaica', 'trinidad', 'tobago', 'aruba', 'curacao', 'bonaire', 'sint maarten', 'sint eustatius', 'saba', 'anguilla', 'antigua', 'barbuda', 'saint kitts', 'nevis', 'saint lucia', 'saint vincent', 'grenadines', 'grenada', 'dominica', 'saint pierre', 'miquelon', 'martinique', 'guadeloupe', 'french guiana', 'suriname', 'guyana', 'falkland', 'south georgia', 'south sandwich', 'belize', 'guatemala', 'honduras', 'el salvador', 'nicaragua', 'costa rica', 'panama', 'cuba', 'haiti', 'dominican republic', 'puerto rico', 'virgin islands', 'saint barthelemy', 'saint martin', 'saint vincent', 'grenadines', 'anguilla', 'antigua', 'barbuda', 'saint kitts', 'nevis', 'saint lucia', 'saint vincent', 'grenadines', 'grenada', 'dominica', 'saint pierre', 'miquelon', 'martinique', 'guadeloupe', 'french guiana', 'suriname', 'guyana', 'falkland', 'south georgia', 'south sandwich', 'bermuda', 'bahamas', 'barbados', 'jamaica', 'trinidad', 'tobago', 'aruba', 'curacao', 'bonaire', 'sint maarten', 'sint eustatius', 'saba', 'anguilla', 'antigua', 'barbuda', 'saint kitts', 'nevis', 'saint lucia', 'saint vincent', 'grenadines', 'grenada', 'dominica', 'saint pierre', 'miquelon', 'martinique', 'guadeloupe', 'french guiana', 'suriname', 'guyana', 'falkland', 'south georgia', 'south sandwich'];
+  const filtered = {};
+  for (const key of allowed) {
+    if (item[key] !== undefined) filtered[key] = item[key];
+  }
+  return filtered;
+}
+
 async function getQlooRecommendations(parsedTaste) {
   console.log('[Debug] parsedTaste received:', JSON.stringify(parsedTaste));
   const results = {};
@@ -260,25 +301,77 @@ async function getQlooRecommendations(parsedTaste) {
     allCleaned.push(cleanTasteValue(category, tasteValue));
   }
   const detectedRegion = detectRegion(allCleaned);
+
+  // --- Enhanced Multi-Signal Qloo Mapping ---
+  // For each category, try to get entityId, tagId, and audienceId if possible
   for (const [category, tasteValue] of Object.entries(parsedTaste)) {
     const cleanedValue = cleanTasteValue(category, tasteValue);
-    console.log(`[Debug] Processing category: '${category}', value: '[object Object]', cleaned: '${cleanedValue}'`);
+    let entityId = null, tagId = null, audienceId = null, location = null;
+    let qlooParams = {};
     try {
-      const entityId = await searchQlooEntityByName(category, cleanedValue);
-      console.log(`[Qloo] Found entity for category '${category}':`, entityId);
-      const insights = await getQlooInsightsForEntity(entityId);
-      console.log(`[Qloo] Insights for category '${category}':`, JSON.stringify(insights));
-      results[category] = insights;
+      // 1. Entity ID (main taste)
+      entityId = await searchQlooEntityByName(category, cleanedValue);
+    } catch (err) {
+      console.warn(`[Qloo] No entity for '${category}' value '${cleanedValue}': ${err.message}`);
+    }
+    try {
+      // 2. Tag ID (genre/cuisine/etc.)
+      tagId = await searchQlooTagByName(category, cleanedValue);
+    } catch (err) {
+      console.warn(`[Qloo] No tag for '${category}' value '${cleanedValue}': ${err.message}`);
+    }
+    // 3. Audience ID (if interests present)
+    if (parsedTaste.interests && Array.isArray(parsedTaste.interests)) {
+      for (const interest of parsedTaste.interests) {
+        try {
+          audienceId = await searchQlooAudienceByName(interest);
+          break; // Use the first found for now
+        } catch (err) {
+          console.warn(`[Qloo] No audience for interest '${interest}': ${err.message}`);
+        }
+      }
+    }
+    // 4. Location (from travel or region)
+    if (parsedTaste.region) location = parsedTaste.region;
+    else if (category === 'travel' && cleanedValue) location = cleanedValue;
+
+    // 5. Build Qloo params for this category
+    qlooParams = {
+      'filter.type': `urn:entity:${categoryMap[category] || category}`,
+      ...(entityId && { 'signal.interests.entities': entityId }),
+      ...(tagId && { 'signal.tags': tagId }),
+      ...(audienceId && { 'signal.demographics.audiences': audienceId }),
+      ...(location && { 'signal.location.query': location }),
+      take: 5
+    };
+    // 6. Try Qloo API call with all signals
+    try {
+      const QLOO_API_KEY = process.env.QLOO_API_KEY;
+      const QLOO_API_URL = process.env.QLOO_API_URL || "https://hackathon.api.qloo.com";
+      const params = Object.entries(qlooParams)
+        .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+        .join('&');
+      const url = `${QLOO_API_URL}/v2/insights?${params}`;
+      const options = { method: 'GET', headers: { 'X-Api-Key': QLOO_API_KEY } };
+      const response = await fetch(url, options);
+      if (!response.ok) throw new Error(`Qloo API error: ${response.statusText}`);
+      const insights = await response.json();
+      if (insights && insights.results && insights.results.length > 0) {
+        results[category] = insights.results.map(filterQlooFields);
+        continue;
+      }
+      throw new Error('No Qloo results');
     } catch (err) {
       console.warn(`[Qloo] Using mock data for category '${category}' (reason: ${err.message})`);
+      // --- Fallback Logic ---
       const normalizedCategory = categoryMap[category] || category;
       const mockArray = generateMockRecommendations({ [normalizedCategory]: tasteValue })[normalizedCategory];
       let match = null;
       if (cleanedValue && mockArray && cleanedValue.toLowerCase() !== 'not specified') {
         match = mockArray.find(item =>
           item.name.toLowerCase().includes(cleanedValue.toLowerCase()) ||
-          (item.description && item.description.toLowerCase().includes(cleanedValue.toLowerCase()))
-        );
+          (item.description && item.description.toLowerCase().includes(cleanedValue.toLowerCase())
+        ));
       }
       // Region-aware fallback: if not specified, use region default if available
       if ((!match || cleanedValue.toLowerCase() === 'not specified' || !cleanedValue) && detectedRegion && regionDefaults[detectedRegion]) {

@@ -63,49 +63,26 @@ const CULTURAL_TRIGGERS = {
 function smartParse(input) {
   const result = { music: [], food: [], book: [], travel: [] };
   const inputLower = input.toLowerCase();
-  
-  // 1. Detect explicit mentions
-  for (const category of Object.keys(result)) {
-    const matches = inputLower.match(new RegExp(`(love|like|enjoy|prefer)\\s+(${category}\\s+)?([a-z0-9\\s]+)`, 'i'));
-    if (matches && matches[3]) {
-      result[category].push(matches[3].trim());
-    }
-  }
 
-  // 2. Cultural/regional detection
-  for (const [region, data] of Object.entries(CULTURAL_PROFILES)) {
-    if (inputLower.includes(region)) {
-      for (const [category, items] of Object.entries(data)) {
-        result[category] = [...new Set([...result[category], ...items])];
-      }
-    }
-  }
+  // Split input by commas and 'and'
+  const phrases = inputLower.split(/,| and /).map(s => s.trim());
 
-  // 3. Keyword triggers
-  for (const [category, triggers] of Object.entries(CULTURAL_TRIGGERS)) {
-    for (const [key, terms] of Object.entries(triggers)) {
-      if (terms.some(term => inputLower.includes(term))) {
-        result[category].push(key);
-      }
-    }
-  }
+  // Keyword lists for each category
+  const musicKeywords = ['music', 'song', 'band', 'jazz', 'rock', 'pop', 'k-pop', 'indie', 'classical', 'salsa', 'hip-hop', 'folk', 'blues', 'edm'];
+  const foodKeywords = ['food', 'dish', 'cuisine', 'sushi', 'pizza', 'burger', 'taco', 'biryani', 'kimchi', 'curry', 'pasta', 'ramen', 'paella', 'croissant', 'pastries', 'hot pot', 'burrito'];
+  const bookKeywords = ['book', 'novel', 'author', 'murakami', 'austen', 'twain', 'tolkien', 'asimov', 'marquez', 'coelho', 'hugo', 'zafón', 'lahiri', 'gordimer'];
+  const travelKeywords = ['travel', 'trip', 'visit', 'tokyo', 'paris', 'new york', 'kyoto', 'rio', 'london', 'barcelona', 'sundarbans', 'beijing', 'havana', 'athens', 'mumbai', 'mexico city', 'cape town', 'sydney', 'portland', 'silicon valley', 'provence', 'grand canyon', 'hawaii', 'jeju', 'busan', 'seoul', 'osaka'];
 
-  // 4. Language detection
-  if (/[\u0980-\u09FF]/.test(input)) { // Bengali
-    if (!result.music.length) result.music.push("Rabindra Sangeet");
-    if (!result.food.length) result.food.push("Hilsa fish");
-  } else if (/[áéíóúüñ¿¡]/.test(input)) { // Spanish
-    if (!result.music.length) result.music.push("Flamenco");
-    if (!result.food.length) result.food.push("Paella");
-  }
-
-  // 5. Fallback to sophisticated guessing
-  if (!result.music.length) {
-    if (inputLower.includes("tech") || inputLower.includes("programming")) {
-      result.music.push("Electronic");
-    } else if (inputLower.includes("art") || inputLower.includes("design")) {
-      result.music.push("Indie");
-    }
+  for (const phrase of phrases) {
+    if (musicKeywords.some(k => phrase.includes(k))) result.music.push(phrase);
+    else if (foodKeywords.some(k => phrase.includes(k))) result.food.push(phrase);
+    else if (bookKeywords.some(k => phrase.includes(k))) result.book.push(phrase);
+    else if (travelKeywords.some(k => phrase.includes(k))) result.travel.push(phrase);
+    // Optionally: fallback to first empty category
+    else if (!result.music.length) result.music.push(phrase);
+    else if (!result.food.length) result.food.push(phrase);
+    else if (!result.book.length) result.book.push(phrase);
+    else if (!result.travel.length) result.travel.push(phrase);
   }
 
   // Remove duplicates and empty categories
@@ -115,7 +92,6 @@ function smartParse(input) {
       result[category] = ["Not specified"];
     }
   }
-
   return result;
 }
 
@@ -156,7 +132,16 @@ exports.handler = async function(event, context) {
         locallyParsed.food[0] === "Not specified") {
       
       const prompt = `
-        You are a world-class cultural and lifestyle expert. Given a user's input, infer and fill in their likely preferences for music, food, book, and travel, even if not explicitly mentioned. Use cultural, regional, and contextual clues, and be creative, rational, and professional. Always return a JSON object with these four keys. If you must guess, do so intelligently and with cultural sensitivity. Make the results user-friendly, relevant, and impressive.
+        You are a world-class cultural and lifestyle expert. Given a user's input, infer and fill in their likely preferences for music, food, book, and travel, even if not explicitly mentioned. Assign each detected item to the correct category. Do not repeat the same value for multiple categories unless it makes sense. If a category is not mentioned, use 'Not specified'. Always return a JSON object with these four keys.
+
+        Example input: "I love jazz, sushi, and Murakami novels, and I'm planning a trip to Tokyo."
+        Example output: {"music": "jazz", "food": "sushi", "book": "Murakami novels", "travel": "Tokyo"}
+
+        Example input: "My favorites are K-pop, ramen, and Haruki Murakami, and I want to visit Kyoto."
+        Example output: {"music": "K-pop", "food": "ramen", "book": "Haruki Murakami", "travel": "Kyoto"}
+
+        Example input: "Recommend me food and music for a trip to Paris. I like jazz and pastries."
+        Example output: {"music": "jazz", "food": "pastries", "book": "Not specified", "travel": "Paris"}
 
         Example input: "I am Bangladeshi."
         Example output: {"music": "Rabindra Sangeet", "food": "Hilsa fish", "book": "Humayun Ahmed novels", "travel": "Sundarbans"}
@@ -246,12 +231,18 @@ exports.handler = async function(event, context) {
 
       if (response.data) {
         const geminiData = JSON.parse(response.data);
+        // --- Post-process Gemini output to ensure uniqueness ---
+        const used = new Set();
+        for (const category of ["music", "food", "book", "travel"]) {
+          if (geminiData[category] && used.has(geminiData[category])) {
+            geminiData[category] = "Not specified";
+          }
+          used.add(geminiData[category]);
+        }
         // Merge Gemini results with local parsing
         for (const category of ["music", "food", "book", "travel"]) {
-          if (geminiData[category]) {
-            qlooReadyData[category] = [
-              ...new Set([...qlooReadyData[category], ...geminiData[category]])
-            ];
+          if (geminiData[category] && geminiData[category] !== "Not specified") {
+            locallyParsed[category] = [geminiData[category]];
           }
         }
       }
