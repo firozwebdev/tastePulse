@@ -23,6 +23,7 @@ export const useTasteStore = defineStore('taste', () => {
   const structuredInput = ref({});
   const entitySearchResults = ref({});
   const entitySearchLoading = ref(false);
+  const isAuthModalOpen = ref(false);
   
   // Parse free text input with GPT
   async function parseWithGPT(input) {
@@ -963,111 +964,141 @@ export const useTasteStore = defineStore('taste', () => {
       processingError.value = null;
       tasteInput.value = input;
       
-      // Parse the input
-      const parsed = await parseWithGPT(input);
-      parsedTaste.value = parsed;
+      let parsedResult;
+      if (inputMode.value === 'freetext') {
+        parsedResult = await parseWithGPT(input);
+      } else {
+        parsedResult = await processStructuredInput(input);
+      }
       
-      // Get recommendations based on parsed taste
-      const recs = await getQlooRecommendations(parsed);
-      recommendations.value = recs;
+      parsedTaste.value = parsedResult;
+      
+      const recommendationsResult = await getQlooRecommendations(parsedResult);
+      recommendations.value = recommendationsResult;
       
       processingStage.value = 'complete';
-      return recs;
+      
+      return recommendations.value;
     } catch (error) {
       console.error('Error processing input:', error);
-      processingError.value = 'Failed to process your taste preferences. Please try again.';
+      processingError.value = error.message || 'An unexpected error occurred.';
       throw error;
     } finally {
       isProcessing.value = false;
     }
   }
-  
+
   // Save taste profile to user account
   async function saveTasteProfile(profileName) {
     try {
       if (!isAuthenticated.value) {
+        isAuthModalOpen.value = true;
         throw new Error('You must be logged in to save a profile');
       }
-      
-      const profile = {
-        id: `profile-${Date.now()}`,
-        name: profileName || `Taste Profile ${savedProfiles.value.length + 1}`,
-        date: new Date().toISOString(),
-        input: tasteInput.value,
-        parsedTaste: parsedTaste.value,
-        recommendations: recommendations.value
+
+      const profileData = {
+        user_id: user.value.id,
+        name: profileName,
+        taste_input: tasteInput.value,
+        parsed_taste: parsedTaste.value,
       };
-      
-      // In a real app, this would save to Supabase or another backend
-      // For now, we'll just add it to the local state
-      savedProfiles.value.push(profile);
-      
-      return profile;
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert([profileData])
+        .select();
+
+      if (error) throw error;
+
+      savedProfiles.value.push(data[0]);
+      return data[0];
+
     } catch (error) {
       console.error('Error saving taste profile:', error);
       throw error;
     }
   }
-  
+
   // Save individual recommendation
   async function saveRecommendation(recommendation, category) {
     try {
       if (!isAuthenticated.value) {
         throw new Error('You must be logged in to save a recommendation');
       }
-      
+
       const savedRec = {
         id: `rec-${Date.now()}`,
         date: new Date().toISOString(),
         category,
         ...recommendation
       };
-      
+
       // In a real app, this would save to Supabase or another backend
       // For now, we'll just add it to the local state
       savedRecommendations.value.push(savedRec);
-      
+
       return savedRec;
     } catch (error) {
       console.error('Error saving recommendation:', error);
       throw error;
     }
   }
-  
+
   // Load saved profiles from user account
-  async function loadSavedProfiles() {
-    try {
-      if (!isAuthenticated.value) {
-        return [];
-      }
-      
-      // In a real app, this would load from Supabase or another backend
-      // For now, we'll just return the local state
-      return savedProfiles.value;
-    } catch (error) {
-      console.error('Error loading saved profiles:', error);
-      throw error;
-    }
-  }
-  
   // Load saved recommendations from user account
   async function loadSavedRecommendations() {
     try {
       if (!isAuthenticated.value) {
-        return [];
+        savedRecommendations.value = [];
+        return;
       }
-      
-      // In a real app, this would load from Supabase or another backend
-      // For now, we'll just return the local state
+
+      // TODO: This is a mock implementation. Update to fetch from Supabase.
+      console.log('Mock loading saved recommendations...');
       return savedRecommendations.value;
+
     } catch (error) {
       console.error('Error loading saved recommendations:', error);
       throw error;
     }
   }
-  
+
+  // Load a specific profile into the main state
+  function loadProfile(profile) {
+    tasteInput.value = profile.taste_input;
+    parsedTaste.value = profile.parsed_taste;
+    recommendations.value = {}; // Clear previous recommendations
+    // Optionally, you could re-run recommendations here or store them in the profile
+  }
+
+  // Load saved profiles from user account
+  async function loadSavedProfiles() {
+    try {
+      if (!isAuthenticated.value) {
+        savedProfiles.value = [];
+        return [];
+      }
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.value.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      savedProfiles.value = data;
+      return data;
+
+    } catch (error) {
+      console.error('Error loading saved profiles:', error);
+      savedProfiles.value = [];
+      throw error;
+    }
+  }
+
   // Delete a saved profile
-  async function deleteSavedProfile(profileId) {
+  async function deleteProfile(profileId) {
     try {
       if (!isAuthenticated.value) {
         throw new Error('You must be logged in to delete a profile');
@@ -1132,7 +1163,7 @@ export const useTasteStore = defineStore('taste', () => {
     user.value = {
       id: userData.id,
       email: userData.email,
-      name: userData.user_metadata?.name || userData.email.split('@')[0],
+      name: userData.user_metadata?.full_name || userData.user_metadata?.name || userData.email.split('@')[0],
       avatar_url: userData.user_metadata?.avatar_url
     };
     
@@ -1143,6 +1174,35 @@ export const useTasteStore = defineStore('taste', () => {
     return user.value;
   }
   
+  // Update user profile data
+  async function updateUserProfile({ fullName, username }) {
+    const metadata = {
+      full_name: fullName,
+      username: username,
+      name: fullName, // Keep 'name' consistent with 'full_name'
+    };
+    try {
+      const { data, error } = await supabase.auth.updateUser({ data: metadata });
+      if (error) throw error;
+      await setUser(data.user);
+      return data.user;
+    } catch (error) {
+      console.error('Error updating user profile:', error);
+      throw error;
+    }
+  }
+
+  // Update user password
+  async function updateUserPassword(newPassword) {
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating user password:', error);
+      throw error;
+    }
+  }
+
   // User logout
   async function logout() {
     try {
@@ -1205,10 +1265,14 @@ export const useTasteStore = defineStore('taste', () => {
     saveRecommendation,
     loadSavedProfiles,
     loadSavedRecommendations,
-    deleteSavedProfile,
+    loadProfile,
+    deleteProfile,
     deleteSavedRecommendation,
     setUser,
     logout,
-    reset
+    updateUserProfile,
+    updateUserPassword,
+    reset,
+    isAuthModalOpen
   };
 });

@@ -19,6 +19,13 @@ const isMobileMenuOpen = ref(false);
 const isAuthModalOpen = ref(false);
 const authModalMode = ref('login');
 
+function closeAuthModal() {
+  isAuthModalOpen.value = false;
+  if (tasteStore.isAuthModalOpen) {
+    tasteStore.isAuthModalOpen = false;
+  }
+}
+
 // Language state
 const selectedLanguage = ref('en');
 
@@ -56,6 +63,14 @@ function changeLanguage(langCode) {
 const route = useRoute();
 watch(() => route.path, () => {
   isMobileMenuOpen.value = false;
+});
+
+// Watch for requests from the store to open the auth modal
+watch(() => tasteStore.isAuthModalOpen, (newValue) => {
+  if (newValue) {
+    authModalMode.value = 'login'; // Default to login when opened from store
+    isAuthModalOpen.value = true;
+  }
 });
 
 // Initialize theme and watch for system changes
@@ -234,7 +249,7 @@ onMounted(() => {
     <AuthModal 
       v-model:show="isAuthModalOpen" 
       :initial-mode="authModalMode"
-      @success="isAuthModalOpen = false"
+      @close="closeAuthModal"
     />
     
     <!-- Footer -->

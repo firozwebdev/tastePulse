@@ -57,6 +57,15 @@
             </svg>
           </button>
         </div>
+                <div v-if="!isLogin" class="text-right mt-1">
+          <button 
+            type="button"
+            @click="suggestPassword"
+            class="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 transition-colors font-medium"
+          >
+            Suggest Strong Password
+          </button>
+        </div>
         <p v-if="errors.password" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errors.password }}</p>
       </div>
 
@@ -112,6 +121,26 @@
       </button>
     </form>
 
+    <!-- Divider -->
+    <div class="my-6 flex items-center">
+      <div class="flex-grow border-t border-gray-300 dark:border-gray-600"></div>
+      <span class="flex-shrink mx-4 text-gray-500 dark:text-gray-400 text-sm">Or continue with</span>
+      <div class="flex-grow border-t border-gray-300 dark:border-gray-600"></div>
+    </div>
+
+    <!-- Social Logins -->
+    <div class="space-y-4">
+      <button 
+        @click="signInWithGoogle"
+        type="button"
+        class="w-full inline-flex justify-center items-center py-2.5 px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white dark:bg-dark-card text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-dark-card transition-colors"
+        :disabled="isLoading"
+      >
+        <svg class="w-5 h-5 mr-3" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>Google</title><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.85 3.18-1.73 4.1-1.02 1.02-2.37 1.62-3.82 1.62-4.63 0-8.38-3.77-8.38-8.38s3.75-8.38 8.38-8.38c2.6 0 4.22 1.02 5.2 2.02l2.58-2.58C18.97 2.34 16.13 1 12.48 1 5.83 1 1 5.83 1 12.5s4.83 11.5 11.48 11.5c3.22 0 5.83-1.1 7.73-3.02 2.05-2.05 2.63-4.82 2.63-7.73v-1.82h-9.28z" fill="currentColor"/></svg>
+        Sign in with Google
+      </button>
+    </div>
+
     <!-- Toggle Login/Signup -->
     <div class="mt-6 text-center">
       <p class="text-gray-600 dark:text-gray-400">
@@ -132,7 +161,9 @@
 import { ref, computed } from 'vue';
 import { useTasteStore } from '../stores/taste';
 import { useNotification } from '../composables/useNotification';
+import { useClipboard } from '../composables/useClipboard';
 import supabase from '../utils/supabase';
+import { generate } from 'generate-password-browser';
 
 const props = defineProps({
   isLogin: {
@@ -145,6 +176,7 @@ const emit = defineEmits(['success', 'mode-change']);
 
 const tasteStore = useTasteStore();
 const notification = useNotification();
+const { copy, copied } = useClipboard();
 
 // Form state
 const email = ref('');
@@ -254,51 +286,58 @@ function toggleMode() {
   emit('mode-change', props.isLogin ? 'signup' : 'login');
 }
 
+function suggestPassword() {
+  const newPassword = generate({
+    length: 16,
+    numbers: true,
+    symbols: true,
+    uppercase: true,
+    lowercase: true,
+    strict: true,
+  });
+  password.value = newPassword;
+  confirmPassword.value = newPassword;
+  copy(newPassword);
+  notification.success('Password Generated', 'A new strong password has been generated and copied to your clipboard.');
+}
+
+async function signInWithGoogle() {
+  isLoading.value = true;
+  try {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+    });
+    if (error) throw error;
+    // The user will be redirected to Google's sign-in page.
+    // After authentication, they will be redirected back to the app.
+    // The onAuthStateChange listener in taste.js will handle the session.
+  } catch (error) {
+    console.error('Google sign-in error:', error);
+    notification.error('Google Sign-In Failed', error.message || 'An unexpected error occurred.');
+  } finally {
+    isLoading.value = false;
+  }
+}
+
 async function loginAsDemo() {
   isLoading.value = true;
   
   try {
     // Use the demo account credentials
-    const demoEmail = 'demo@tastepulse.app';
+    const demoEmail = 'demo@example.com';
     const demoPassword = 'tastepulse123';
     
-    // Try to login with demo credentials
+    // IMPORTANT: The demo user (demo@example.com) must be created manually in your Supabase project dashboard.
+    // This function will only attempt to log in, not create the user.
     const { data, error } = await supabase.auth.signInWithPassword({
       email: demoEmail,
       password: demoPassword
     });
-    
-    // If demo user doesn't exist, create it
-    if (error && error.message.includes('Invalid login credentials')) {
-      // Create demo user
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: demoEmail,
-        password: demoPassword,
-        options: {
-          data: {
-            name: 'Demo User',
-            avatar_url: null
-          }
-        }
-      });
-      
-      if (signUpError) throw signUpError;
-      
-      // If demo user was created successfully, log them in
-      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-        email: demoEmail,
-        password: demoPassword
-      });
-      
-      if (loginError) throw loginError;
-      
-      await tasteStore.setUser(loginData.user);
-    } else if (error) {
-      throw error;
-    } else {
-      // Login successful
-      await tasteStore.setUser(data.user);
-    }
+
+    if (error) throw error;
+
+    // Login successful
+    await tasteStore.setUser(data.user);
     
     notification.success('Welcome, Demo User!', 'You are now signed in with the demo account.');
     emit('success');

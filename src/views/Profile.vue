@@ -3,10 +3,10 @@
     <div class="max-w-6xl mx-auto">
       <!-- Profile Header -->
       <ProfileHeader 
-        :userName="tasteStore.user?.email?.split('@')[0] || 'Guest User'"
+        :userName="tasteStore.user?.name || 'Guest User'"
         :isAuthenticated="tasteStore.isAuthenticated"
         :profileCount="profiles.length"
-        :savedCount="0"
+        :savedCount="0" 
         :categoriesCount="getCategoriesCount()"
         :matchCount="getAverageMatchPercentage()"
         @login="openAuthModal('login')"
@@ -134,7 +134,7 @@
                   </BaseButton>
                   
                   <BaseButton 
-                    @click="deleteProfile(profile.id)"
+                    @click="requestDeleteProfile(profile.id)"
                     variant="danger"
                     size="sm"
                     class="p-2"
@@ -245,16 +245,51 @@
         </div>
       </div>
     </div>
+
+    <!-- Settings Modal -->
+    <div v-if="showSettings" class="fixed inset-0 z-50 overflow-y-auto bg-gray-500 bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75 transition-opacity" @click="showSettings = false">
+      <div class="flex items-center justify-center min-h-screen">
+        <div class="bg-white dark:bg-dark-card rounded-xl shadow-card-light dark:shadow-card-dark border border-gray-100 dark:border-dark-border p-8 max-w-lg w-full mx-4" @click.stop>
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-display font-bold text-gray-900 dark:text-white">Settings</h2>
+            <button @click="showSettings = false" class="p-2 rounded-full text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div class="space-y-8">
+            <UpdateProfileForm @updated="showSettings = false" />
+            <div class="border-t border-gray-200 dark:border-gray-700"></div>
+            <UpdatePasswordForm @updated="showSettings = false" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ConfirmModal
+      :is-open="isConfirmModalOpen"
+      title="Delete Profile"
+      message="Are you sure you want to delete this taste profile? This action is permanent and cannot be undone."
+      confirm-text="Delete"
+      confirm-class="danger"
+      @confirm="handleConfirmDelete"
+      @cancel="isConfirmModalOpen = false"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useTasteStore } from '../stores/taste';
 import { useNotification } from '../composables/useNotification';
+import ProfileHeader from '../components/ProfileHeader.vue';
 import BaseButton from '../components/BaseButton.vue';
+import ConfirmModal from '../components/ConfirmModal.vue';
 import LoadingSpinner from '../components/LoadingSpinner.vue';
+import UpdateProfileForm from '../components/UpdateProfileForm.vue';
+import UpdatePasswordForm from '../components/UpdatePasswordForm.vue';
 
 const router = useRouter();
 const tasteStore = useTasteStore();
@@ -263,13 +298,54 @@ const notification = useNotification();
 const isLoading = ref(true);
 const profiles = ref([]);
 const similarProfiles = ref([]);
+const isConfirmModalOpen = ref(false);
+const profileToDelete = ref(null);
+const showSettings = ref(false);
+const showAuthModal = ref(false);
+const authMode = ref('login');
+
+// Computed properties for header stats
+const getCategoriesCount = () => {
+  const categories = new Set();
+  profiles.value.forEach(p => {
+    if(p.parsedTaste) {
+      Object.keys(p.parsedTaste).forEach(cat => categories.add(cat));
+    }
+  });
+  return categories.size;
+};
+
+const getAverageMatchPercentage = () => {
+  if (similarProfiles.value.length === 0) return 0;
+  const total = similarProfiles.value.reduce((sum, p) => sum + p.matchPercentage, 0);
+  return Math.round(total / similarProfiles.value.length);
+};
+
+// Auth Modal
+function openAuthModal(mode) {
+  authMode.value = mode;
+  showAuthModal.value = true;
+}
+
+async function handleLogout() {
+  await tasteStore.logout();
+  notification.success('Logged Out', 'You have been successfully logged out.');
+  router.push('/');
+}
+
+function openSettings() {
+  showSettings.value = true;
+}
 
 // Load profiles on component mount
 onMounted(async () => {
   try {
-    await loadProfiles();
-    await loadSimilarProfiles();
+    if (tasteStore.isAuthenticated) {
+      await loadProfiles();
+      await loadSimilarProfiles();
+    }
   } catch (error) {
+    notification.error('Error', 'Could not load profile data.');
     console.error('Error loading profiles:', error);
   } finally {
     isLoading.value = false;
@@ -278,13 +354,11 @@ onMounted(async () => {
 
 // Function to load user profiles
 async function loadProfiles() {
-  profiles.value = await tasteStore.getUserProfiles();
+  profiles.value = await tasteStore.loadSavedProfiles();
 }
 
-// Function to load similar profiles
+// Function to load similar profiles (mock data)
 async function loadSimilarProfiles() {
-  // This would be implemented with Supabase in a real app
-  // For now, we'll use mock data
   similarProfiles.value = [
     {
       userId: '8f7d3e2a1b9c',
@@ -309,75 +383,69 @@ async function loadSimilarProfiles() {
 
 // Function to view a specific profile
 function viewProfile(profile) {
-  // Load the profile data into the store
   tasteStore.loadProfile(profile);
-  // Navigate to the results page
   router.push('/results');
 }
 
 // Function to delete a profile
-async function deleteProfile(profileId) {
-  if (confirm('Are you sure you want to delete this profile?')) {
-    try {
-      await tasteStore.deleteProfile(profileId);
-      // Refresh the profiles list
-      await loadProfiles();
-      notification.success('Profile Deleted', 'Your taste profile has been deleted successfully.');
-    } catch (error) {
-      console.error('Error deleting profile:', error);
-      notification.error('Delete Failed', 'Could not delete your taste profile. Please try again.');
-    }
+function requestDeleteProfile(profileId) {
+  profileToDelete.value = profileId;
+  isConfirmModalOpen.value = true;
+}
+
+async function handleConfirmDelete() {
+  if (!profileToDelete.value) return;
+
+  try {
+    await tasteStore.deleteProfile(profileToDelete.value);
+    await loadProfiles();
+    notification.success('Profile Deleted', 'Your taste profile has been deleted successfully.');
+  } catch (error) {
+    console.error('Error deleting profile:', error);
+    notification.error('Delete Failed', 'Could not delete the profile.');
+  } finally {
+    isConfirmModalOpen.value = false;
+    profileToDelete.value = null;
   }
 }
 
 // Function to share a profile
 function shareProfile(profile) {
-  // Create a shareable URL
   const shareUrl = `${window.location.origin}/shared-profile?id=${profile.id}`;
-  
-  // Use Web Share API if available
   if (navigator.share) {
     navigator.share({
       title: 'My TastePulse Profile',
-      text: `Check out my taste profile on TastePulse: ${profile.tasteInput.substring(0, 50)}${profile.tasteInput.length > 50 ? '...' : ''}`,
+      text: `Check out my taste profile on TastePulse: ${profile.taste_input.substring(0, 50)}...`,
       url: shareUrl
     }).then(() => {
-      notification.success('Shared Successfully', 'Your profile has been shared.');
+      notification.success('Shared Successfully');
     }).catch(err => {
       if (err.name !== 'AbortError') {
-        console.error('Error sharing:', err);
-        notification.warning('Share Failed', 'Falling back to clipboard copy.');
         copyToClipboard(shareUrl);
       }
     });
   } else {
-    // Fallback to clipboard copy
     copyToClipboard(shareUrl);
-    notification.info('Link Copied', 'Profile link copied to clipboard!');
   }
 }
 
-// Helper function to copy text to clipboard
 function copyToClipboard(text) {
-  const textarea = document.createElement('textarea');
-  textarea.value = text;
-  document.body.appendChild(textarea);
-  textarea.select();
-  document.execCommand('copy');
-  document.body.removeChild(textarea);
+  navigator.clipboard.writeText(text).then(() => {
+    notification.info('Link Copied', 'Profile link copied to clipboard!');
+  }).catch(err => {
+    console.error('Failed to copy text: ', err);
+    notification.error('Copy Failed', 'Could not copy link to clipboard.');
+  });
 }
 
 // Helper function to format dates
 function formatDate(timestamp) {
   if (!timestamp) return 'Unknown date';
-  
   const date = new Date(timestamp);
   return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+    day: 'numeric'
   }).format(date);
 }
 </script>

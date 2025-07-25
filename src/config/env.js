@@ -2,12 +2,12 @@
 const config = {
   development: {
     API_BASE_URL: 'http://localhost:8080',
-    SUPABASE_URL: 'https://your-project.supabase.co',
-    SUPABASE_ANON_KEY: 'your-supabase-anon-key',
+    SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
+    SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
     QLOO_API_URL: 'https://api.qloo.com/v1',
     QLOO_API_KEY: 'P6WXhn-98bT0H__jpKNimCEwq1oa6DW8WVtVFj4I_QU',
     GPT_API_URL: 'https://api.openai.com/v1',
-    GPT_API_KEY: 'your-openai-api-key',
+    GPT_API_KEY: import.meta.env.VITE_OPENAI_API_KEY,
     GEMINI_API_URL: 'https://generativelanguage.googleapis.com/v1beta',
     GEMINI_API_KEY: 'AIzaSyBtO2J8lMY7hakS-LeBBhy-Zqhzpb-Iw98',
     ENABLE_MOCK_API: true,
