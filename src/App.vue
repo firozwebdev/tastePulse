@@ -1,15 +1,23 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import NotificationManager from './components/NotificationManager.vue';
 import LanguageSelector from './components/LanguageSelector.vue';
+import AuthModal from './components/AuthModal.vue';
 import { useTheme } from './composables/useTheme.js';
+import { useTasteStore } from './stores/taste';
 
 // Use theme composable
 const { isDarkMode, toggleDarkMode, initializeTheme, watchSystemTheme } = useTheme();
 
-// Mobile menu state
+// Store
+const tasteStore = useTasteStore();
+const router = useRouter();
+
+// UI state
 const isMobileMenuOpen = ref(false);
+const isAuthModalOpen = ref(false);
+const authModalMode = ref('login');
 
 // Language state
 const selectedLanguage = ref('en');
@@ -17,6 +25,24 @@ const selectedLanguage = ref('en');
 // Toggle mobile menu
 function toggleMobileMenu() {
   isMobileMenuOpen.value = !isMobileMenuOpen.value;
+}
+
+// Auth functions
+function openLogin() {
+  authModalMode.value = 'login';
+  isAuthModalOpen.value = true;
+  isMobileMenuOpen.value = false;
+}
+
+function openSignup() {
+  authModalMode.value = 'signup';
+  isAuthModalOpen.value = true;
+  isMobileMenuOpen.value = false;
+}
+
+async function handleLogout() {
+  await tasteStore.logout();
+  router.push('/');
 }
 
 // Change language
@@ -76,7 +102,36 @@ onMounted(() => {
           </div>
           
           <!-- Right side buttons -->
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-3">
+            <!-- Auth buttons (desktop) -->
+            <template v-if="!tasteStore.isAuthenticated">
+              <button
+                @click="openLogin"
+                class="hidden sm:inline-flex items-center px-3 py-1.5 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-md"
+              >
+                Sign In
+              </button>
+              <button
+                @click="openSignup"
+                class="hidden sm:inline-flex items-center px-3 py-1.5 text-sm font-medium bg-primary-600 hover:bg-primary-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+              >
+                Sign Up
+              </button>
+            </template>
+            
+            <!-- User menu (desktop) -->
+            <div v-else class="hidden sm:block relative">
+              <button
+                @click="handleLogout"
+                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-md"
+              >
+                <span class="mr-2">{{ tasteStore.user?.name || 'User' }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
+            </div>
+            
             <!-- Language Selector -->
             <LanguageSelector 
               :selected-language="selectedLanguage" 
@@ -118,6 +173,30 @@ onMounted(() => {
       <!-- Mobile menu -->
       <div v-if="isMobileMenuOpen" class="sm:hidden bg-white dark:bg-dark-card border-t border-gray-200 dark:border-dark-border">
         <div class="pt-2 pb-3 space-y-1">
+          <!-- Auth buttons (mobile) -->
+          <template v-if="!tasteStore.isAuthenticated">
+            <button
+              @click="openLogin"
+              class="block w-full text-left pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-700"
+            >
+              Sign In
+            </button>
+            <button
+              @click="openSignup"
+              class="block w-full text-left pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-700"
+            >
+              Sign Up
+            </button>
+          </template>
+          
+          <!-- User menu (mobile) -->
+          <button
+            v-else
+            @click="handleLogout"
+            class="block w-full text-left pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-700"
+          >
+            Sign Out
+          </button>
           <router-link to="/" class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium" :class="[$route.path === '/' ? 'border-primary-500 text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/10' : 'border-transparent text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-700']">
             Home
           </router-link>
@@ -150,6 +229,13 @@ onMounted(() => {
         </transition>
       </router-view>
     </main>
+    
+    <!-- Auth Modal -->
+    <AuthModal 
+      v-model:show="isAuthModalOpen" 
+      :initial-mode="authModalMode"
+      @success="isAuthModalOpen = false"
+    />
     
     <!-- Footer -->
     <footer class="bg-white dark:bg-dark-card border-t border-gray-200 dark:border-dark-border py-6">

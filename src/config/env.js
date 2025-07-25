@@ -10,7 +10,7 @@ const config = {
     GPT_API_KEY: 'your-openai-api-key',
     GEMINI_API_URL: 'https://generativelanguage.googleapis.com/v1beta',
     GEMINI_API_KEY: 'AIzaSyBtO2J8lMY7hakS-LeBBhy-Zqhzpb-Iw98',
-    ENABLE_MOCK_API: false,
+    ENABLE_MOCK_API: true,
     DEBUG: true
   },
   

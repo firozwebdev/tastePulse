@@ -455,7 +455,7 @@ async function submitTaste() {
   
   try {
     // Call the store action to process the taste input
-    await tasteStore.processTasteInput(tasteInput.value);
+    await tasteStore.processInput(tasteInput.value);
     
     // Navigate to the results page
     router.push('/results');

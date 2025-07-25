@@ -47,6 +47,9 @@ export const apiEndpoints = {
 
   // Qloo endpoints
   getRecommendations: '/api/recommendations',
+  searchEntities: (category) => `/api/entities/search/${category}`,
+  validateEntities: '/api/entities/validate',
+  getEntityById: (id) => `/api/entities/${id}`,
 
   // User endpoints
   saveProfile: '/api/profiles',
@@ -54,7 +57,10 @@ export const apiEndpoints = {
   deleteProfile: (id) => `/api/profiles/${id}`,
 
   // Similar profiles
-  getSimilarProfiles: '/api/profiles/similar'
+  getSimilarProfiles: '/api/profiles/similar',
+  
+  // Structured input
+  processStructuredInput: '/api/structured-input'
 };
 
 // Mock API functions for development
@@ -129,6 +135,161 @@ export const mockApi = {
       recommendations[category] = generateMockRecommendations(category, parsedTaste[category]);
     });
 
+    return recommendations;
+  },
+  
+  async searchEntities(category, query) {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    // Generate mock search results based on category and query
+    const results = [];
+    const categories = ['music', 'food', 'book', 'travel'];
+    
+    if (!categories.includes(category)) {
+      return { error: 'Invalid category', results: [] };
+    }
+    
+    if (!query || query.length < 2) {
+      return { results: [] };
+    }
+    
+    // Generate 3-7 mock results
+    const count = Math.floor(Math.random() * 5) + 3;
+    
+    for (let i = 0; i < count; i++) {
+      const id = `${category}_${Math.floor(Math.random() * 10000)}`;
+      let name, description;
+      
+      // Generate category-specific mock results
+      switch(category) {
+        case 'music':
+          if (query.toLowerCase().includes('jazz')) {
+            name = [`Miles Davis`, `John Coltrane`, `Ella Fitzgerald`, `Duke Ellington`, `Thelonious Monk`][i % 5];
+            description = 'Jazz musician';
+          } else if (query.toLowerCase().includes('rock')) {
+            name = [`Led Zeppelin`, `The Beatles`, `Queen`, `Pink Floyd`, `The Rolling Stones`][i % 5];
+            description = 'Rock band';
+          } else {
+            name = `${query.charAt(0).toUpperCase() + query.slice(1)} ${['Band', 'Orchestra', 'Ensemble', 'Quartet', 'Trio'][i % 5]}`;
+            description = `${['Popular', 'Emerging', 'Classic', 'Contemporary', 'Fusion'][i % 5]} ${['artist', 'musician', 'composer', 'performer', 'band'][i % 5]}`;
+          }
+          break;
+          
+        case 'food':
+          if (query.toLowerCase().includes('ramen')) {
+            name = [`Tonkotsu Ramen`, `Shoyu Ramen`, `Miso Ramen`, `Shio Ramen`, `Tsukemen`][i % 5];
+            description = 'Japanese noodle dish';
+          } else if (query.toLowerCase().includes('pizza')) {
+            name = [`Neapolitan Pizza`, `New York Style Pizza`, `Chicago Deep Dish`, `Sicilian Pizza`, `Detroit Style Pizza`][i % 5];
+            description = 'Pizza variety';
+          } else {
+            name = `${query.charAt(0).toUpperCase() + query.slice(1)} ${['Cuisine', 'Dish', 'Specialty', 'Delicacy', 'Recipe'][i % 5]}`;
+            description = `${['Traditional', 'Modern', 'Fusion', 'Gourmet', 'Street'][i % 5]} ${['food', 'dish', 'cuisine', 'delicacy', 'specialty'][i % 5]}`;
+          }
+          break;
+          
+        case 'book':
+          if (query.toLowerCase().includes('fiction')) {
+            name = [`The Great Gatsby`, `To Kill a Mockingbird`, `1984`, `Pride and Prejudice`, `The Catcher in the Rye`][i % 5];
+            description = 'Classic fiction novel';
+          } else if (query.toLowerCase().includes('sci-fi')) {
+            name = [`Dune`, `Foundation`, `Neuromancer`, `The Hitchhiker's Guide to the Galaxy`, `Ender's Game`][i % 5];
+            description = 'Science fiction novel';
+          } else {
+            name = `The ${query.charAt(0).toUpperCase() + query.slice(1)} ${['Chronicles', 'Series', 'Saga', 'Trilogy', 'Collection'][i % 5]}`;
+            description = `${['Award-winning', 'Bestselling', 'Acclaimed', 'Popular', 'Classic'][i % 5]} ${['novel', 'book', 'series', 'anthology', 'publication'][i % 5]}`;
+          }
+          break;
+          
+        case 'travel':
+          if (query.toLowerCase().includes('japan')) {
+            name = [`Tokyo`, `Kyoto`, `Osaka`, `Hokkaido`, `Okinawa`][i % 5];
+            description = 'Japanese destination';
+          } else if (query.toLowerCase().includes('beach')) {
+            name = [`Maldives`, `Bali`, `Santorini`, `Hawaii`, `Cancun`][i % 5];
+            description = 'Beach destination';
+          } else {
+            name = `${query.charAt(0).toUpperCase() + query.slice(1)} ${['City', 'Island', 'Mountains', 'National Park', 'Coast'][i % 5]}`;
+            description = `${['Popular', 'Hidden gem', 'Historic', 'Scenic', 'Cultural'][i % 5]} ${['destination', 'location', 'attraction', 'place', 'region'][i % 5]}`;
+          }
+          break;
+      }
+      
+      results.push({
+        id,
+        name,
+        description,
+        category,
+        image: `https://images.unsplash.com/photo-${Math.floor(1500000000 + Math.random() * 100000000)}?w=200&h=150&auto=format&fit=crop&q=80`,
+        match: Math.floor(Math.random() * 20) + 80 // Match score between 80-99
+      });
+    }
+    
+    return { results };
+  },
+  
+  async validateEntities(entities) {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Mock validation - in a real API this would check if entities exist in the database
+    const validatedEntities = {};
+    const categories = ['music', 'food', 'book', 'travel'];
+    
+    categories.forEach(category => {
+      if (entities[category]) {
+        // Simulate that 90% of entities are valid
+        validatedEntities[category] = entities[category].map(entity => ({
+          ...entity,
+          valid: Math.random() < 0.9,
+          suggestions: Math.random() < 0.9 ? [] : [
+            { id: `${category}_${Math.floor(Math.random() * 10000)}`, name: `${entity.name} (corrected)` },
+            { id: `${category}_${Math.floor(Math.random() * 10000)}`, name: `Alternative to ${entity.name}` }
+          ]
+        }));
+      }
+    });
+    
+    return validatedEntities;
+  },
+  
+  async getEntityById(id) {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Parse the category from the ID (format: category_number)
+    const category = id.split('_')[0];
+    
+    // Generate a mock entity based on the ID
+    return {
+      id,
+      name: `Entity ${id}`,
+      description: `A ${category} entity with ID ${id}`,
+      category,
+      image: `https://images.unsplash.com/photo-${Math.floor(1500000000 + Math.random() * 100000000)}?w=400&h=300&auto=format&fit=crop&q=80`,
+      details: {
+        popularity: Math.floor(Math.random() * 100),
+        year: 2000 + Math.floor(Math.random() * 23),
+        tags: ['tag1', 'tag2', 'tag3'].slice(0, Math.floor(Math.random() * 3) + 1)
+      }
+    };
+  },
+  
+  async processStructuredInput(structuredInput) {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Mock processing of structured input
+    const recommendations = {};
+    const categories = ['music', 'food', 'book', 'travel'];
+    
+    categories.forEach(category => {
+      if (structuredInput[category] && structuredInput[category].length > 0) {
+        recommendations[category] = generateMockRecommendations(category, structuredInput[category][0].name);
+      }
+    });
+    
     return recommendations;
   }
 };

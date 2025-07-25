@@ -1,6 +1,18 @@
 <template>
   <div class="min-h-screen py-8 px-4">
     <div class="max-w-6xl mx-auto">
+      <!-- Profile Header -->
+      <ProfileHeader 
+        :userName="tasteStore.user?.email?.split('@')[0] || 'Guest User'"
+        :isAuthenticated="tasteStore.isAuthenticated"
+        :profileCount="profiles.length"
+        :savedCount="0"
+        :categoriesCount="getCategoriesCount()"
+        :matchCount="getAverageMatchPercentage()"
+        @login="openAuthModal('login')"
+        @logout="handleLogout"
+        @settings="openSettings"
+      />
       <!-- Loading State -->
       <div v-if="isLoading" class="flex flex-col items-center justify-center py-20 animate-fade-in">
         <LoadingSpinner 

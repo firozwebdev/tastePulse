@@ -4,8 +4,8 @@ import { createRouter, createWebHistory } from 'vue-router';
 import App from './App.vue';
 import './style.css';
 
-// Import routes
-import routes from './router/index.js';
+// Import routes and navigation guards
+import { routes, setupNavigationGuards } from './router/index.js';
 
 // Create Vue Router instance
 const router = createRouter({
@@ -15,6 +15,9 @@ const router = createRouter({
     return { top: 0 };
   }
 });
+
+// Setup navigation guards for protected routes
+setupNavigationGuards(router);
 
 // Create Pinia store
 const pinia = createPinia();
