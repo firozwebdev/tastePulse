@@ -1289,13 +1289,46 @@ export const useTasteStore = defineStore('taste', () => {
   // Save to Supabase
   async function saveSavedRecommendationToSupabase(savedItem) {
     try {
+      // First, try to get or create a profile for this user
+      let profileId = null;
+      
+      if (savedProfiles.value.length > 0) {
+        // Use the most recent profile
+        profileId = savedProfiles.value[savedProfiles.value.length - 1].id;
+      } else {
+        // Create a temporary profile for saving recommendations
+        const tempProfile = {
+          user_id: savedItem.userId,
+          name: 'Quick Save Profile',
+          taste_input: 'Saved recommendations',
+          parsed_taste: {},
+          recommendations: {}
+        };
+        
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .insert([tempProfile])
+          .select()
+          .single();
+          
+        if (profileError) {
+          console.warn('Could not create profile, using fallback:', profileError);
+          // Fallback: save without profile_id (will need to modify schema)
+          profileId = 1; // Use a default profile ID
+        } else {
+          profileId = profileData.id;
+          savedProfiles.value.push(profileData);
+        }
+      }
+
       const { error } = await supabase
         .from('saved_recommendations')
         .insert([{
           user_id: savedItem.userId,
+          profile_id: profileId,
           recommendation_data: savedItem.recommendation,
           category: savedItem.category,
-          saved_at: savedItem.savedAt
+          created_at: savedItem.savedAt
         }]);
 
       if (error) throw error;

@@ -330,12 +330,23 @@
               </div>
               
               <div class="p-4">
-                <h3 class="font-semibold text-lg text-gray-900 dark:text-white">{{ item.name }}</h3>
+                <h3 class="font-semibold text-lg text-gray-900 dark:text-white cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 transition-colors" @click="showDetails(item)">{{ item.name }}</h3>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ item.description }}</p>
                 
                 <div class="mt-4 flex justify-between items-center">
                   <span class="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">{{ item.category }}</span>
                   <div class="flex gap-2">
+                    <button 
+                      class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium flex items-center gap-1"
+                      @click="showDetails(item)"
+                      title="View Details"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      Details
+                    </button>
                     <button 
                       class="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 text-sm font-medium flex items-center gap-1"
                       @click="saveRecommendation(item)"
@@ -458,6 +469,16 @@
         </transition>
       </div>
     </div>
+
+    <!-- Recommendation Details Modal -->
+    <RecommendationDetailsModal
+      :is-open="showDetailsModal"
+      :recommendation="selectedRecommendation"
+      @close="closeDetailsModal"
+      @save="handleSaveFromModal"
+      @share="handleShareFromModal"
+      @find-similar="handleFindSimilar"
+    />
   </div>
 </template>
 
@@ -469,6 +490,7 @@ import TasteDnaChart from '../components/TasteDnaChart.vue';
 import BaseButton from '../components/BaseButton.vue';
 import LoadingSpinner from '../components/LoadingSpinner.vue';
 import ErrorState from '../components/ErrorState.vue';
+import RecommendationDetailsModal from '../components/RecommendationDetailsModal.vue';
 import { getFallbackImage } from '../utils/helpers';
 
 const router = useRouter();
@@ -482,6 +504,10 @@ const viewMode = ref('grid'); // 'grid' or 'list' view mode
 const surpriseResults = ref(null);
 const isSurpriseLoading = ref(false);
 const isSurpriseVisible = ref(false);
+
+// Details Modal State
+const showDetailsModal = ref(false);
+const selectedRecommendation = ref(null);
 
 // Get data from the store
 const tasteInput = computed(() => tasteStore.tasteInput);
@@ -749,6 +775,31 @@ function getTasteSummary(category, value) {
     return parts.length > 0 ? parts.join(', ') : '';
   }
   return '';
+}
+
+// Details Modal Methods
+function showDetails(recommendation) {
+  selectedRecommendation.value = recommendation;
+  showDetailsModal.value = true;
+}
+
+function closeDetailsModal() {
+  showDetailsModal.value = false;
+  selectedRecommendation.value = null;
+}
+
+function handleSaveFromModal(recommendation) {
+  saveRecommendation(recommendation);
+}
+
+function handleShareFromModal(recommendation) {
+  shareRecommendation(recommendation);
+}
+
+function handleFindSimilar(recommendation) {
+  notification.info('Finding Similar', `Looking for recommendations similar to ${recommendation.name}...`);
+  // Here you could implement logic to find similar recommendations
+  // For now, we'll just show a notification
 }
 
 // Methods for tab styling

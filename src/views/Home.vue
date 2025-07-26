@@ -114,9 +114,10 @@
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
               <BaseButton
                 type="submit"
-                :disabled="isLoading || !tasteInput.trim()"
+                :disabled="isLoading || !tasteInput.trim() || !tasteStore.isAuthenticated"
                 :loading="isLoading"
                 size="lg"
+                @click="handleDiscoverTaste"
               >
                 <template #icon-left v-if="!isLoading">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -452,6 +453,19 @@ function useSampleInput() {
   tasteInput.value = sampleInputs[randomIndex];
 }
 
+// Function to handle discover taste with login check
+function handleDiscoverTaste(event) {
+  event.preventDefault();
+  
+  if (!tasteStore.isAuthenticated) {
+    notification.error('Login Required', 'Please sign in to discover your taste profile.');
+    tasteStore.isAuthModalOpen = true;
+    return;
+  }
+  
+  submitTaste();
+}
+
 // Function to submit the taste input
 async function submitTaste() {
   if (!tasteInput.value.trim()) return;
@@ -466,7 +480,7 @@ async function submitTaste() {
     router.push('/results');
   } catch (error) {
     console.error('Error processing taste input:', error);
-    // Handle error (could add error state here)
+    notification.error('Analysis Failed', 'Could not analyze your preferences. Please try again.');
   } finally {
     isLoading.value = false;
   }

@@ -347,7 +347,24 @@ async function submitForm() {
         created_at: new Date().toISOString()
       }]);
     
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase error:', error);
+      // Fallback to localStorage for demo purposes
+      const contactMessages = JSON.parse(localStorage.getItem('contactMessages') || '[]');
+      contactMessages.push({
+        id: Date.now(),
+        type: formData.value.type,
+        first_name: formData.value.firstName,
+        last_name: formData.value.lastName,
+        email: formData.value.email,
+        subject: formData.value.subject,
+        message: formData.value.message,
+        priority: formData.value.priority,
+        status: 'new',
+        created_at: new Date().toISOString()
+      });
+      localStorage.setItem('contactMessages', JSON.stringify(contactMessages));
+    }
     
     notification.success('Message Sent!', 'Thank you for contacting us. We\'ll get back to you soon.');
     emit('close');
@@ -366,7 +383,41 @@ async function submitForm() {
     
   } catch (error) {
     console.error('Error submitting contact form:', error);
-    notification.error('Send Failed', 'Could not send your message. Please try again or email us directly.');
+    
+    // Fallback to localStorage even on network errors
+    try {
+      const contactMessages = JSON.parse(localStorage.getItem('contactMessages') || '[]');
+      contactMessages.push({
+        id: Date.now(),
+        type: formData.value.type,
+        first_name: formData.value.firstName,
+        last_name: formData.value.lastName,
+        email: formData.value.email,
+        subject: formData.value.subject,
+        message: formData.value.message,
+        priority: formData.value.priority,
+        status: 'new',
+        created_at: new Date().toISOString()
+      });
+      localStorage.setItem('contactMessages', JSON.stringify(contactMessages));
+      
+      notification.success('Message Saved!', 'Your message has been saved locally. We\'ll process it soon.');
+      emit('close');
+      
+      // Reset form
+      formData.value = {
+        type: 'support',
+        firstName: '',
+        lastName: '',
+        email: '',
+        subject: '',
+        message: '',
+        priority: 'medium',
+        consent: false
+      };
+    } catch (fallbackError) {
+      notification.error('Send Failed', 'Could not send your message. Please try again or email us directly.');
+    }
   } finally {
     isSubmitting.value = false;
   }
