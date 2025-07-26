@@ -1236,9 +1236,20 @@ export const useTasteStore = defineStore('taste', () => {
       savedProfiles.value = [];
       savedRecommendations.value = [];
       
+      // Show success notification
+      const { useNotification } = await import('../composables/useNotification');
+      const notification = useNotification();
+      notification.success('Logged Out', 'You have been successfully logged out.');
+      
       return true;
     } catch (error) {
       console.error('Error logging out:', error);
+      
+      // Show error notification
+      const { useNotification } = await import('../composables/useNotification');
+      const notification = useNotification();
+      notification.error('Logout Failed', 'Could not log you out. Please try again.');
+      
       throw error;
     }
   }

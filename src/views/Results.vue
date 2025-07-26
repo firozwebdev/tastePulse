@@ -803,6 +803,20 @@ function getCategoryDotClass(category) {
   animation: draw 2s ease-in-out forwards;
 }
 
+/* Subtle bounce instead of aggressive shake */
+@keyframes gentle-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+.animate-gentle-bounce {
+  animation: gentle-bounce 3s ease-in-out infinite;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

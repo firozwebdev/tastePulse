@@ -1,12 +1,9 @@
 -- TastePulse Database Schema for Supabase
--- This file contains the SQL schema for the TastePulse application
-
--- Enable Row Level Security (RLS) for all tables
--- This ensures users can only access their own data
+-- Corrected schema with consistent UUID types and improved constraints
 
 -- Create profiles table for storing user taste profiles
 CREATE TABLE IF NOT EXISTS profiles (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
   taste_input TEXT NOT NULL,
@@ -20,7 +17,7 @@ CREATE TABLE IF NOT EXISTS profiles (
 CREATE TABLE IF NOT EXISTS saved_recommendations (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  profile_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  profile_id BIGINT REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   recommendation_data JSONB NOT NULL,
   category TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -82,32 +79,6 @@ CREATE POLICY "Users can update their own saved recommendations" ON saved_recomm
 CREATE POLICY "Users can delete their own saved recommendations" ON saved_recommendations
   FOR DELETE USING (auth.uid() = user_id);
 
--- Create RLS policies for user_preferences table
-CREATE POLICY "Users can view their own preferences" ON user_preferences
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert their own preferences" ON user_preferences
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update their own preferences" ON user_preferences
-  FOR UPDATE USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete their own preferences" ON user_preferences
-  FOR DELETE USING (auth.uid() = user_id);
-
--- Create RLS policies for user_sessions table
-CREATE POLICY "Users can view their own sessions" ON user_sessions
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert their own sessions" ON user_sessions
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update their own sessions" ON user_sessions
-  FOR UPDATE USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete their own sessions" ON user_sessions
-  FOR DELETE USING (auth.uid() = user_id);
-
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS profiles_user_id_idx ON profiles(user_id);
 CREATE INDEX IF NOT EXISTS profiles_created_at_idx ON profiles(created_at DESC);
@@ -130,10 +101,6 @@ $$ language 'plpgsql';
 -- Create triggers to automatically update updated_at columns
 CREATE TRIGGER update_profiles_updated_at 
   BEFORE UPDATE ON profiles 
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_user_preferences_updated_at 
-  BEFORE UPDATE ON user_preferences 
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Create a function to automatically create user preferences when a user signs up
@@ -159,29 +126,6 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Create demo user data (optional - for development/testing)
--- Note: This should be run manually in your Supabase dashboard, not in production
-
--- Insert demo user preferences (run this after creating the demo user in Supabase Auth)
--- INSERT INTO user_preferences (user_id, theme, language, notifications_enabled, public_profile)
--- VALUES (
---   (SELECT id FROM auth.users WHERE email = 'demo@example.com'),
---   'system',
---   'en',
---   true,
---   true
--- );
-
--- Insert sample taste profiles for demo user
--- INSERT INTO profiles (user_id, name, taste_input, parsed_taste, recommendations)
--- VALUES (
---   (SELECT id FROM auth.users WHERE email = 'demo@example.com'),
---   'Demo Profile 1',
---   'I love lo-fi beats and Japanese ramen',
---   '{"music": "lo-fi beats", "food": "Japanese ramen"}',
---   '{"music": [{"name": "Nujabes", "match": 95}], "food": [{"name": "Ichiran Ramen", "match": 96}]}'
--- );
-
 -- Create a view for user profile statistics (optional)
 CREATE OR REPLACE VIEW user_profile_stats AS
 SELECT 
@@ -198,11 +142,6 @@ LEFT JOIN profiles p ON u.id = p.user_id
 LEFT JOIN saved_recommendations sr ON u.id = sr.user_id
 LEFT JOIN user_preferences up ON u.id = up.user_id
 GROUP BY u.id, u.email, up.theme, up.language, up.public_profile;
-
--- Grant necessary permissions (adjust as needed for your setup)
--- GRANT USAGE ON SCHEMA public TO authenticated;
--- GRANT ALL ON ALL TABLES IN SCHEMA public TO authenticated;
--- GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 
 -- Create a function to get user profile summary
 CREATE OR REPLACE FUNCTION get_user_profile_summary(user_uuid UUID)
@@ -262,3 +201,99 @@ COMMENT ON TABLE user_sessions IS 'Tracks user sessions for analytics and securi
 COMMENT ON FUNCTION get_user_profile_summary IS 'Returns summary statistics for a user profile';
 COMMENT ON FUNCTION search_profiles IS 'Searches user profiles by text content';
 COMMENT ON FUNCTION cleanup_expired_sessions IS 'Removes expired user sessions from the database';
+
+-- Create contact_messages table for storing contact form submissions
+CREATE TABLE contact_messages (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  type VARCHAR(50) NOT NULL DEFAULT 'support',
+  first_name VARCHAR(100) NOT NULL,
+  last_name VARCHAR(100) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  subject VARCHAR(500) NOT NULL,
+  message TEXT NOT NULL,
+  priority VARCHAR(20) NOT NULL DEFAULT 'medium',
+  status VARCHAR(20) NOT NULL DEFAULT 'new',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Add RLS policies for contact_messages
+ALTER TABLE contact_messages ENABLE ROW LEVEL SECURITY;
+
+-- Allow anyone to insert contact messages (for the contact form)
+CREATE POLICY "Anyone can insert contact messages" ON contact_messages
+  FOR INSERT WITH CHECK (true);
+
+-- Only authenticated users can view their own messages (optional)
+CREATE POLICY "Users can view own contact messages" ON contact_messages
+  FOR SELECT USING (auth.uid() IS NOT NULL);
+
+-- Create user_analytics table for tracking user behavior
+CREATE TABLE user_analytics (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  event_type VARCHAR(100) NOT NULL,
+  event_data JSONB,
+  session_id VARCHAR(255),
+  ip_address INET,
+  user_agent TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Add RLS policies for user_analytics
+ALTER TABLE user_analytics ENABLE ROW LEVEL SECURITY;
+
+-- Users can only view their own analytics
+CREATE POLICY "Users can view own analytics" ON user_analytics
+  FOR SELECT USING (auth.uid() = user_id);
+
+-- Allow inserting analytics data
+CREATE POLICY "Anyone can insert analytics" ON user_analytics
+  FOR INSERT WITH CHECK (true);
+
+-- Create app_feedback table for user feedback and ratings
+CREATE TABLE app_feedback (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+  feedback_text TEXT,
+  category VARCHAR(50) DEFAULT 'general',
+  is_anonymous BOOLEAN DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Add RLS policies for app_feedback
+ALTER TABLE app_feedback ENABLE ROW LEVEL SECURITY;
+
+-- Users can view their own feedback
+CREATE POLICY "Users can view own feedback" ON app_feedback
+  FOR SELECT USING (auth.uid() = user_id);
+
+-- Users can insert their own feedback
+CREATE POLICY "Users can insert own feedback" ON app_feedback
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Create feature_requests table
+CREATE TABLE feature_requests (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  title VARCHAR(255) NOT NULL,
+  description TEXT NOT NULL,
+  category VARCHAR(50) DEFAULT 'enhancement',
+  priority VARCHAR(20) DEFAULT 'medium',
+  status VARCHAR(20) DEFAULT 'submitted',
+  votes INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Add RLS policies for feature_requests
+ALTER TABLE feature_requests ENABLE ROW LEVEL SECURITY;
+
+-- Users can view all feature requests
+CREATE POLICY "Anyone can view feature requests" ON feature_requests
+  FOR SELECT USING (true);
+
+-- Users can insert their own feature requests
+CREATE POLICY "Users can insert own feature requests" ON feature_requests
+  FOR INSERT WITH CHECK (auth.uid() = user_id);

@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import NotificationManager from './components/NotificationManager.vue';
 import LanguageSelector from './components/LanguageSelector.vue';
 import AuthModal from './components/AuthModal.vue';
+import FeedbackWidget from './components/FeedbackWidget.vue';
 import { useTheme } from './composables/useTheme.js';
 import { useTasteStore } from './stores/taste';
 
@@ -300,6 +301,9 @@ onMounted(() => {
       @close="closeAuthModal"
       @success="closeAuthModal"
     />
+    
+    <!-- Feedback Widget -->
+    <FeedbackWidget />
     
     <!-- Footer -->
     <footer class="bg-white dark:bg-dark-card border-t border-gray-200 dark:border-dark-border py-6">
