@@ -375,9 +375,14 @@
 import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useTasteStore } from '../stores/taste';
+import { useNotification } from '../composables/useNotification';
 import { detectLanguage } from '../utils/helpers';
 import BaseButton from '../components/BaseButton.vue';
 import BaseTextarea from '../components/BaseTextarea.vue';
+import TasteAnalyzer from '../components/TasteAnalyzer.vue';
+import TasteDnaChart from '../components/TasteDnaChart.vue';
+import RecommendationCard from '../components/RecommendationCard.vue';
+import LoadingSpinner from '../components/LoadingSpinner.vue';
 
 const router = useRouter();
 const tasteStore = useTasteStore();

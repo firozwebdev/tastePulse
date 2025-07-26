@@ -1,26 +1,26 @@
 import { inject, getCurrentInstance } from 'vue';
 
 export function useNotification() {
-  // Try to get the notification manager from the current component instance
+  // Try to get the notification manager from injection first
+  const injectedManager = inject('notificationManager', null);
+  
+  // Try to get from global properties as fallback
   const instance = getCurrentInstance();
-  const notificationManager = instance?.appContext.config.globalProperties.$notificationManager;
+  const globalManager = instance?.appContext.config.globalProperties.$notificationManager;
   
-  // If notification manager is not available through global properties, try to get it from the parent component
-  const parentNotificationManager = inject('notificationManager', null);
-  
-  // Use whichever is available
-  const manager = notificationManager || parentNotificationManager;
+  // Use the injected manager's value if it's a ref, otherwise use it directly
+  const manager = (injectedManager?.value || injectedManager) || globalManager;
   
   if (!manager) {
     console.warn('NotificationManager not found. Make sure it is properly set up in your app.');
     
     // Return dummy functions to prevent errors
     return {
-      success: () => console.warn('NotificationManager not available'),
-      error: () => console.warn('NotificationManager not available'),
-      warning: () => console.warn('NotificationManager not available'),
-      info: () => console.warn('NotificationManager not available'),
-      clearAll: () => console.warn('NotificationManager not available')
+      success: (title, message = '') => console.log(`SUCCESS: ${title} - ${message}`),
+      error: (title, message = '') => console.error(`ERROR: ${title} - ${message}`),
+      warning: (title, message = '') => console.warn(`WARNING: ${title} - ${message}`),
+      info: (title, message = '') => console.info(`INFO: ${title} - ${message}`),
+      clearAll: () => console.log('Clear all notifications')
     };
   }
   
@@ -31,7 +31,14 @@ export function useNotification() {
      * @param {string} message - Optional message
      * @param {Object} options - Additional options (duration, autoClose)
      */
-    success: (title, message = '', options = {}) => manager.success(title, message, options),
+    success: (title, message = '', options = {}) => {
+      try {
+        return manager.success(title, message, options);
+      } catch (error) {
+        console.error('Notification error:', error);
+        console.log(`SUCCESS: ${title} - ${message}`);
+      }
+    },
     
     /**
      * Show an error notification
@@ -39,7 +46,14 @@ export function useNotification() {
      * @param {string} message - Optional message
      * @param {Object} options - Additional options (duration, autoClose)
      */
-    error: (title, message = '', options = {}) => manager.error(title, message, options),
+    error: (title, message = '', options = {}) => {
+      try {
+        return manager.error(title, message, options);
+      } catch (error) {
+        console.error('Notification error:', error);
+        console.error(`ERROR: ${title} - ${message}`);
+      }
+    },
     
     /**
      * Show a warning notification
@@ -47,7 +61,14 @@ export function useNotification() {
      * @param {string} message - Optional message
      * @param {Object} options - Additional options (duration, autoClose)
      */
-    warning: (title, message = '', options = {}) => manager.warning(title, message, options),
+    warning: (title, message = '', options = {}) => {
+      try {
+        return manager.warning(title, message, options);
+      } catch (error) {
+        console.error('Notification error:', error);
+        console.warn(`WARNING: ${title} - ${message}`);
+      }
+    },
     
     /**
      * Show an info notification
@@ -55,11 +76,25 @@ export function useNotification() {
      * @param {string} message - Optional message
      * @param {Object} options - Additional options (duration, autoClose)
      */
-    info: (title, message = '', options = {}) => manager.info(title, message, options),
+    info: (title, message = '', options = {}) => {
+      try {
+        return manager.info(title, message, options);
+      } catch (error) {
+        console.error('Notification error:', error);
+        console.info(`INFO: ${title} - ${message}`);
+      }
+    },
     
     /**
      * Clear all notifications
      */
-    clearAll: () => manager.clearAll()
+    clearAll: () => {
+      try {
+        return manager.clearAll();
+      } catch (error) {
+        console.error('Notification error:', error);
+        console.log('Clear all notifications');
+      }
+    }
   };
 }

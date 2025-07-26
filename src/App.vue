@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, getCurrentInstance, provide } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import NotificationManager from './components/NotificationManager.vue';
 import LanguageSelector from './components/LanguageSelector.vue';
@@ -73,10 +73,58 @@ watch(() => tasteStore.isAuthModalOpen, (newValue) => {
   }
 });
 
+// Notification manager ref
+const notificationManager = ref(null);
+
+// Create a reactive notification manager object that will be provided
+const notificationService = {
+  success: (title, message = '', options = {}) => {
+    if (notificationManager.value) {
+      return notificationManager.value.success(title, message, options);
+    }
+    console.log(`SUCCESS: ${title} - ${message}`);
+  },
+  error: (title, message = '', options = {}) => {
+    if (notificationManager.value) {
+      return notificationManager.value.error(title, message, options);
+    }
+    console.error(`ERROR: ${title} - ${message}`);
+  },
+  warning: (title, message = '', options = {}) => {
+    if (notificationManager.value) {
+      return notificationManager.value.warning(title, message, options);
+    }
+    console.warn(`WARNING: ${title} - ${message}`);
+  },
+  info: (title, message = '', options = {}) => {
+    if (notificationManager.value) {
+      return notificationManager.value.info(title, message, options);
+    }
+    console.info(`INFO: ${title} - ${message}`);
+  },
+  clearAll: () => {
+    if (notificationManager.value) {
+      return notificationManager.value.clearAll();
+    }
+    console.log('Clear all notifications');
+  }
+};
+
+// Provide notification service to child components
+provide('notificationManager', notificationService);
+
 // Initialize theme and watch for system changes
 onMounted(() => {
   initializeTheme();
   watchSystemTheme();
+  
+  // Set up global notification manager after component is mounted
+  if (notificationManager.value) {
+    const app = getCurrentInstance()?.appContext.app;
+    if (app) {
+      app.config.globalProperties.$notificationManager = notificationService;
+    }
+  }
 });
 </script>
 
@@ -247,9 +295,10 @@ onMounted(() => {
     
     <!-- Auth Modal -->
     <AuthModal 
-      v-model:show="isAuthModalOpen" 
+      :is-open="isAuthModalOpen" 
       :initial-mode="authModalMode"
       @close="closeAuthModal"
+      @success="closeAuthModal"
     />
     
     <!-- Footer -->

@@ -247,25 +247,74 @@
     </div>
 
     <!-- Settings Modal -->
-    <div v-if="showSettings" class="fixed inset-0 z-50 overflow-y-auto bg-gray-500 bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75 transition-opacity" @click="showSettings = false">
-      <div class="flex items-center justify-center min-h-screen">
-        <div class="bg-white dark:bg-dark-card rounded-xl shadow-card-light dark:shadow-card-dark border border-gray-100 dark:border-dark-border p-8 max-w-lg w-full mx-4" @click.stop>
-          <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-display font-bold text-gray-900 dark:text-white">Settings</h2>
-            <button @click="showSettings = false" class="p-2 rounded-full text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500">
+    <div v-if="showSettings" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div class="bg-white dark:bg-dark-card rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+          <div class="flex justify-between items-center">
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Account Settings</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Manage your profile and view analytics</p>
+            </div>
+            <button @click="showSettings = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
-          <div class="space-y-8">
-            <UpdateProfileForm @updated="showSettings = false" />
-            <div class="border-t border-gray-200 dark:border-gray-700"></div>
-            <UpdatePasswordForm @updated="showSettings = false" />
+        </div>
+        
+        <!-- Tabs -->
+        <div class="border-b border-gray-200 dark:border-gray-700">
+          <nav class="flex space-x-8 px-6" aria-label="Tabs">
+            <button
+              @click="activeTab = 'settings'"
+              :class="[
+                'py-4 px-1 border-b-2 font-medium text-sm',
+                activeTab === 'settings'
+                  ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'
+              ]"
+            >
+              Settings
+            </button>
+            <button
+              @click="activeTab = 'analytics'"
+              :class="[
+                'py-4 px-1 border-b-2 font-medium text-sm',
+                activeTab === 'analytics'
+                  ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'
+              ]"
+            >
+              Analytics
+            </button>
+          </nav>
+        </div>
+        
+        <div class="p-6">
+          <UserSettings v-if="activeTab === 'settings'" />
+          <div v-else-if="activeTab === 'analytics'" class="text-center py-12">
+            <div class="w-16 h-16 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary-600 dark:text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H9z" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">Analytics Coming Soon</h3>
+            <p class="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+              Advanced analytics and insights for your taste profiles will be available soon.
+            </p>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Auth Modal -->
+    <AuthModal
+      :is-open="showAuthModal"
+      :initial-mode="authMode"
+      @close="showAuthModal = false"
+      @success="handleAuthSuccess"
+    />
 
     <ConfirmModal
       :is-open="isConfirmModalOpen"
@@ -288,8 +337,8 @@ import ProfileHeader from '../components/ProfileHeader.vue';
 import BaseButton from '../components/BaseButton.vue';
 import ConfirmModal from '../components/ConfirmModal.vue';
 import LoadingSpinner from '../components/LoadingSpinner.vue';
-import UpdateProfileForm from '../components/UpdateProfileForm.vue';
-import UpdatePasswordForm from '../components/UpdatePasswordForm.vue';
+import AuthModal from '../components/AuthModal.vue';
+import UserSettings from '../components/UserSettings.vue';
 
 const router = useRouter();
 const tasteStore = useTasteStore();
@@ -303,6 +352,7 @@ const profileToDelete = ref(null);
 const showSettings = ref(false);
 const showAuthModal = ref(false);
 const authMode = ref('login');
+const activeTab = ref('settings');
 
 // Computed properties for header stats
 const getCategoriesCount = () => {
@@ -335,6 +385,13 @@ async function handleLogout() {
 
 function openSettings() {
   showSettings.value = true;
+}
+
+function handleAuthSuccess() {
+  notification.success('Welcome!', 'You have successfully signed in.');
+  // Reload profiles after successful authentication
+  loadProfiles();
+  loadSimilarProfiles();
 }
 
 // Load profiles on component mount

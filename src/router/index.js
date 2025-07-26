@@ -35,6 +35,12 @@ const routes = [
     meta: { title: 'Sign In or Sign Up - TastePulse' }
   },
   {
+    path: '/reset-password',
+    name: 'PasswordReset',
+    component: () => import('../components/PasswordReset.vue'),
+    meta: { title: 'Reset Password - TastePulse' }
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('../views/NotFound.vue'),

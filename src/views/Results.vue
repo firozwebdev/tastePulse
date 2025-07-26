@@ -64,35 +64,168 @@
             </div>
           </div>
           
-          <!-- Taste DNA Visualization -->
-          <div class="mt-8 flex flex-col md:flex-row gap-8">
-            <div class="w-full md:w-1/3">
-              <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Your Taste DNA</h3>
-              <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 h-64 flex items-center justify-center">
-                <!-- Chart will be rendered here -->
-                <TasteDnaChart :taste-categories="parsedTaste" />
+          <!-- Enhanced Taste DNA Visualization -->
+          <div class="mt-8">
+            <div class="text-center mb-8">
+              <h3 class="text-2xl font-display font-bold text-gray-900 dark:text-white mb-2">
+                Your Cultural DNA
+              </h3>
+              <p class="text-gray-600 dark:text-gray-400">
+                Visual representation of your unique taste profile
+              </p>
+            </div>
+
+            <!-- Main Visualization Area -->
+            <div class="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl p-8 mb-8">
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <!-- DNA Helix Visualization -->
+                <div class="relative">
+                  <div class="aspect-square max-w-md mx-auto">
+                    <svg class="w-full h-full" viewBox="0 0 300 300">
+                      <!-- Background Circle -->
+                      <circle cx="150" cy="150" r="140" fill="none" stroke="currentColor" stroke-width="1" class="text-gray-200 dark:text-gray-700" stroke-dasharray="5,5" />
+                      
+                      <!-- Category Arcs -->
+                      <g v-for="(category, index) in visualCategories" :key="category.name">
+                        <path
+                          :d="category.arcPath"
+                          fill="none"
+                          :stroke="category.color"
+                          stroke-width="8"
+                          stroke-linecap="round"
+                          class="animate-draw"
+                          :style="{ animationDelay: `${index * 0.3}s` }"
+                        />
+                        
+                        <!-- Category Icon -->
+                        <g :transform="`translate(${category.iconX}, ${category.iconY})`">
+                          <circle r="20" :fill="category.color" class="animate-bounce" :style="{ animationDelay: `${index * 0.2}s` }" />
+                          <text text-anchor="middle" dy="6" class="text-sm font-bold fill-white">
+                            {{ category.icon }}
+                          </text>
+                        </g>
+                        
+                        <!-- Percentage Label -->
+                        <text 
+                          :x="category.labelX" 
+                          :y="category.labelY" 
+                          text-anchor="middle" 
+                          class="text-xs font-semibold fill-gray-700 dark:fill-gray-300"
+                        >
+                          {{ category.percentage }}%
+                        </text>
+                      </g>
+                      
+                      <!-- Center Logo/Icon -->
+                      <circle cx="150" cy="150" r="30" fill="url(#centerGradient)" class="animate-pulse" />
+                      <text x="150" y="155" text-anchor="middle" class="text-lg font-bold fill-white">DNA</text>
+                      
+                      <!-- Gradient Definitions -->
+                      <defs>
+                        <linearGradient id="centerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" style="stop-color:#3B82F6" />
+                          <stop offset="100%" style="stop-color:#8B5CF6" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </div>
+                </div>
+
+                <!-- Category Breakdown -->
+                <div class="space-y-4">
+                  <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Taste Breakdown</h4>
+                  
+                  <div v-for="category in visualCategories" :key="category.name" class="group">
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="flex items-center gap-3">
+                        <div 
+                          class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                          :style="{ backgroundColor: category.color }"
+                        >
+                          {{ category.icon }}
+                        </div>
+                        <div>
+                          <div class="font-medium text-gray-900 dark:text-white">{{ category.name }}</div>
+                          <div class="text-sm text-gray-500 dark:text-gray-400 truncate max-w-xs">
+                            {{ category.summary }}
+                          </div>
+                        </div>
+                      </div>
+                      <div class="text-right">
+                        <div class="text-lg font-bold text-gray-900 dark:text-white">{{ category.percentage }}%</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">influence</div>
+                      </div>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-3">
+                      <div 
+                        class="h-2 rounded-full transition-all duration-1000 ease-out"
+                        :style="{ 
+                          width: `${category.percentage}%`, 
+                          backgroundColor: category.color 
+                        }"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            
-            <div class="w-full md:w-2/3">
-              <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Extracted Taste Categories</h3>
-              <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                <div 
-                  v-for="(value, category) in parsedTaste" 
-                  :key="category"
-                  class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 flex items-center gap-3"
-                >
-                  <div 
-                    class="w-10 h-10 rounded-full flex items-center justify-center"
-                    :class="`bg-taste-${category}/20`"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" :class="`text-taste-${category}`" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+
+            <!-- Taste Insights Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <div class="bg-white dark:bg-dark-card rounded-xl p-4 shadow-card-light dark:shadow-card-dark border border-gray-100 dark:border-dark-border">
+                <div class="flex items-center gap-3 mb-2">
+                  <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H9z" />
                     </svg>
                   </div>
                   <div>
-                    <div class="font-medium text-gray-900 dark:text-white capitalize">{{ category }}</div>
-                    <div class="text-sm text-gray-600 dark:text-gray-400">{{ getTasteSummary(category, value) }}</div>
+                    <div class="text-sm font-medium text-gray-600 dark:text-gray-400">Dominant Style</div>
+                    <div class="text-lg font-bold text-gray-900 dark:text-white">{{ dominantStyle }}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-white dark:bg-dark-card rounded-xl p-4 shadow-card-light dark:shadow-card-dark border border-gray-100 dark:border-dark-border">
+                <div class="flex items-center gap-3 mb-2">
+                  <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="text-sm font-medium text-gray-600 dark:text-gray-400">Cultural Affinity</div>
+                    <div class="text-lg font-bold text-gray-900 dark:text-white">{{ culturalAffinity }}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-white dark:bg-dark-card rounded-xl p-4 shadow-card-light dark:shadow-card-dark border border-gray-100 dark:border-dark-border">
+                <div class="flex items-center gap-3 mb-2">
+                  <div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="text-sm font-medium text-gray-600 dark:text-gray-400">Mood Profile</div>
+                    <div class="text-lg font-bold text-gray-900 dark:text-white">{{ moodProfile }}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-white dark:bg-dark-card rounded-xl p-4 shadow-card-light dark:shadow-card-dark border border-gray-100 dark:border-dark-border">
+                <div class="flex items-center gap-3 mb-2">
+                  <div class="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="text-sm font-medium text-gray-600 dark:text-gray-400">Exploration Level</div>
+                    <div class="text-lg font-bold text-gray-900 dark:text-white">{{ explorationLevel }}</div>
                   </div>
                 </div>
               </div>
@@ -128,11 +261,11 @@
               class="px-4 py-2 rounded-lg whitespace-nowrap font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center gap-2"
               :class="[
                 activeCategory === category 
-                  ? `bg-taste-${category} text-white shadow-lg` 
+                  ? getCategoryActiveClass(category)
                   : `bg-white dark:bg-dark-card text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700`
               ]"
             >
-              <span class="w-3 h-3 rounded-full" :class="`bg-taste-${category}/80`"></span>
+              <span class="w-3 h-3 rounded-full" :class="getCategoryDotClass(category)"></span>
               {{ category.charAt(0).toUpperCase() + category.slice(1) }}
             </button>
           </div>
@@ -355,6 +488,106 @@ const tasteInput = computed(() => tasteStore.tasteInput);
 const parsedTaste = computed(() => tasteStore.parsedTaste);
 const recommendations = computed(() => tasteStore.recommendations);
 
+// Category colors and icons
+const categoryConfig = {
+  music: { color: '#3B82F6', icon: '🎵' },
+  food: { color: '#EF4444', icon: '🍜' },
+  book: { color: '#10B981', icon: '📚' },
+  travel: { color: '#F59E0B', icon: '✈️' },
+  fashion: { color: '#8B5CF6', icon: '👗' },
+  brand: { color: '#EC4899', icon: '🏷️' }
+};
+
+// Visual categories for the DNA chart
+const visualCategories = computed(() => {
+  const categories = Object.entries(parsedTaste.value).map(([name, value], index) => {
+    const config = categoryConfig[name] || { color: '#6B7280', icon: '⭐' };
+    const percentage = Math.floor(Math.random() * 30) + 70; // Mock percentage for demo
+    const angle = (index / Object.keys(parsedTaste.value).length) * 2 * Math.PI;
+    const radius = 120;
+    const centerX = 150;
+    const centerY = 150;
+    
+    // Calculate arc path
+    const startAngle = angle - (percentage / 100) * Math.PI / 3;
+    const endAngle = angle + (percentage / 100) * Math.PI / 3;
+    const x1 = centerX + Math.cos(startAngle) * radius;
+    const y1 = centerY + Math.sin(startAngle) * radius;
+    const x2 = centerX + Math.cos(endAngle) * radius;
+    const y2 = centerY + Math.sin(endAngle) * radius;
+    const largeArcFlag = endAngle - startAngle <= Math.PI ? "0" : "1";
+    
+    const arcPath = `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`;
+    
+    return {
+      name: name.charAt(0).toUpperCase() + name.slice(1),
+      percentage,
+      color: config.color,
+      icon: config.icon,
+      summary: getTasteSummary(name, value),
+      arcPath,
+      iconX: centerX + Math.cos(angle) * (radius + 30),
+      iconY: centerY + Math.sin(angle) * (radius + 30),
+      labelX: centerX + Math.cos(angle) * (radius + 55),
+      labelY: centerY + Math.sin(angle) * (radius + 55)
+    };
+  });
+  
+  return categories.sort((a, b) => b.percentage - a.percentage);
+});
+
+// Computed insights
+const dominantStyle = computed(() => {
+  if (visualCategories.value.length === 0) return 'Balanced';
+  const dominant = visualCategories.value[0];
+  
+  const styles = {
+    Music: 'Audiophile',
+    Food: 'Foodie',
+    Book: 'Literary',
+    Travel: 'Explorer',
+    Fashion: 'Trendsetter',
+    Brand: 'Brand Conscious'
+  };
+  
+  return styles[dominant.name] || 'Eclectic';
+});
+
+const culturalAffinity = computed(() => {
+  const input = Object.values(parsedTaste.value).join(' ').toLowerCase();
+  if (input.includes('japanese') || input.includes('japan') || input.includes('anime') || input.includes('manga')) {
+    return 'East Asian';
+  } else if (input.includes('mediterranean') || input.includes('italian') || input.includes('greek')) {
+    return 'Mediterranean';
+  } else if (input.includes('korean') || input.includes('k-pop') || input.includes('k-drama')) {
+    return 'Korean Wave';
+  } else if (input.includes('french') || input.includes('european')) {
+    return 'European';
+  }
+  return 'Global Fusion';
+});
+
+const moodProfile = computed(() => {
+  const input = Object.values(parsedTaste.value).join(' ').toLowerCase();
+  if (input.includes('relax') || input.includes('chill') || input.includes('lo-fi') || input.includes('calm')) {
+    return 'Relaxed';
+  } else if (input.includes('energy') || input.includes('upbeat') || input.includes('rock') || input.includes('dance')) {
+    return 'Energetic';
+  } else if (input.includes('romantic') || input.includes('jazz') || input.includes('wine') || input.includes('cozy')) {
+    return 'Romantic';
+  } else if (input.includes('adventure') || input.includes('explore') || input.includes('travel')) {
+    return 'Adventurous';
+  }
+  return 'Balanced';
+});
+
+const explorationLevel = computed(() => {
+  const categoryCount = Object.keys(parsedTaste.value).length;
+  if (categoryCount >= 4) return 'High Explorer';
+  if (categoryCount >= 2) return 'Moderate Explorer';
+  return 'Focused Explorer';
+});
+
 // Set the active category to the first available one
 onMounted(() => {
   // If there's no taste input, redirect to home
@@ -517,6 +750,33 @@ function getTasteSummary(category, value) {
   }
   return '';
 }
+
+// Methods for tab styling
+function getCategoryActiveClass(category) {
+  const categoryStyles = {
+    music: 'bg-blue-600 text-white shadow-lg border-blue-600',
+    food: 'bg-red-600 text-white shadow-lg border-red-600',
+    book: 'bg-green-600 text-white shadow-lg border-green-600',
+    travel: 'bg-yellow-600 text-white shadow-lg border-yellow-600',
+    fashion: 'bg-purple-600 text-white shadow-lg border-purple-600',
+    brand: 'bg-pink-600 text-white shadow-lg border-pink-600'
+  };
+  
+  return categoryStyles[category] || 'bg-gray-600 text-white shadow-lg border-gray-600';
+}
+
+function getCategoryDotClass(category) {
+  const categoryDotStyles = {
+    music: 'bg-blue-400',
+    food: 'bg-red-400',
+    book: 'bg-green-400',
+    travel: 'bg-yellow-400',
+    fashion: 'bg-purple-400',
+    brand: 'bg-pink-400'
+  };
+  
+  return categoryDotStyles[category] || 'bg-gray-400';
+}
 </script>
 
 <style>
@@ -525,5 +785,120 @@ function getTasteSummary(category, value) {
 }
 .fade-enter-from, .fade-leave-to {
   opacity: 0;
+}
+
+/* DNA Visualization Animations */
+@keyframes draw {
+  from {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+  }
+  to {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-draw {
+  animation: draw 2s ease-in-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes slideInBottom {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-in-bottom {
+  animation: slideInBottom 0.6s ease-out;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.5s ease-out;
+}
+
+/* Hover effects for cards */
+.group:hover .group-hover\:scale-105 {
+  transform: scale(1.05);
+}
+
+.group:hover .group-hover\:shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Custom scrollbar for horizontal tabs */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Pulse animation for DNA center */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Progress bar animation */
+.progress-bar {
+  transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Category icon bounce */
+@keyframes bounce-subtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s ease-in-out infinite;
 }
 </style>

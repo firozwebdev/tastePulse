@@ -1,27 +1,36 @@
 <template>
-  <div class="flex flex-col items-center justify-center" :class="containerClass">
-    <div class="relative">
-      <!-- Main spinner -->
-      <div 
-        class="animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"
-        :class="spinnerSize"
-      ></div>
-      
-      <!-- Inner pulse -->
-      <div 
-        class="absolute inset-0 flex items-center justify-center"
-      >
-        <div 
-          class="bg-white dark:bg-dark-bg rounded-full animate-pulse"
-          :class="innerSize"
-        ></div>
-      </div>
+  <div class="flex flex-col items-center justify-center">
+    <!-- Spinner -->
+    <div 
+      :class="[
+        'animate-spin rounded-full border-solid border-t-transparent',
+        sizeClasses,
+        colorClasses
+      ]"
+    ></div>
+    
+    <!-- Text -->
+    <div v-if="text" class="mt-4 text-center">
+      <p :class="textSizeClasses" class="font-medium text-gray-900 dark:text-white">
+        {{ text }}
+      </p>
+      <p v-if="subtext" class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+        {{ subtext }}
+      </p>
     </div>
     
-    <!-- Loading text -->
-    <div v-if="text" class="mt-4 text-center">
-      <p class="text-lg font-medium text-gray-700 dark:text-gray-300">{{ text }}</p>
-      <p v-if="subtext" class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ subtext }}</p>
+    <!-- Progress Bar (optional) -->
+    <div v-if="showProgress && progress !== null" class="mt-4 w-full max-w-xs">
+      <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
+        <span>Progress</span>
+        <span>{{ Math.round(progress) }}%</span>
+      </div>
+      <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+        <div 
+          class="bg-primary-600 h-2 rounded-full transition-all duration-300 ease-out"
+          :style="{ width: `${Math.min(100, Math.max(0, progress))}%` }"
+        ></div>
+      </div>
     </div>
   </div>
 </template>
@@ -33,7 +42,12 @@ const props = defineProps({
   size: {
     type: String,
     default: 'md',
-    validator: (value) => ['sm', 'md', 'lg', 'xl'].includes(value)
+    validator: (value) => ['xs', 'sm', 'md', 'lg', 'xl'].includes(value)
+  },
+  color: {
+    type: String,
+    default: 'primary',
+    validator: (value) => ['primary', 'secondary', 'white', 'gray'].includes(value)
   },
   text: {
     type: String,
@@ -43,33 +57,63 @@ const props = defineProps({
     type: String,
     default: ''
   },
-  fullScreen: {
+  showProgress: {
     type: Boolean,
     default: false
+  },
+  progress: {
+    type: Number,
+    default: null,
+    validator: (value) => value === null || (value >= 0 && value <= 100)
   }
 });
 
-const spinnerSize = computed(() => {
+const sizeClasses = computed(() => {
   const sizes = {
-    sm: 'w-8 h-8',
-    md: 'w-12 h-12',
-    lg: 'w-16 h-16',
-    xl: 'w-20 h-20'
+    xs: 'w-4 h-4 border-2',
+    sm: 'w-6 h-6 border-2',
+    md: 'w-8 h-8 border-2',
+    lg: 'w-12 h-12 border-3',
+    xl: 'w-16 h-16 border-4'
   };
   return sizes[props.size];
 });
 
-const innerSize = computed(() => {
-  const sizes = {
-    sm: 'w-4 h-4',
-    md: 'w-6 h-6',
-    lg: 'w-8 h-8',
-    xl: 'w-10 h-10'
+const colorClasses = computed(() => {
+  const colors = {
+    primary: 'border-primary-200 dark:border-primary-800 border-t-primary-600 dark:border-t-primary-400',
+    secondary: 'border-gray-200 dark:border-gray-700 border-t-gray-600 dark:border-t-gray-400',
+    white: 'border-white/30 border-t-white',
+    gray: 'border-gray-300 dark:border-gray-600 border-t-gray-700 dark:border-t-gray-300'
   };
-  return sizes[props.size];
+  return colors[props.color];
 });
 
-const containerClass = computed(() => {
-  return props.fullScreen ? 'min-h-screen py-20' : 'py-8';
+const textSizeClasses = computed(() => {
+  const textSizes = {
+    xs: 'text-xs',
+    sm: 'text-sm',
+    md: 'text-base',
+    lg: 'text-lg',
+    xl: 'text-xl'
+  };
+  return textSizes[props.size];
 });
 </script>
+
+<style scoped>
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Custom border width classes */
+.border-3 {
+  border-width: 3px;
+}
+</style>

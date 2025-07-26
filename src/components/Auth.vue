@@ -163,7 +163,6 @@ import { useTasteStore } from '../stores/taste';
 import { useNotification } from '../composables/useNotification';
 import { useClipboard } from '../composables/useClipboard';
 import supabase from '../utils/supabase';
-import { generate } from 'generate-password-browser';
 
 const props = defineProps({
   isLogin: {
@@ -287,14 +286,12 @@ function toggleMode() {
 }
 
 function suggestPassword() {
-  const newPassword = generate({
-    length: 16,
-    numbers: true,
-    symbols: true,
-    uppercase: true,
-    lowercase: true,
-    strict: true,
-  });
+  // Simple password generator
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+  let newPassword = '';
+  for (let i = 0; i < 16; i++) {
+    newPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
   password.value = newPassword;
   confirmPassword.value = newPassword;
   copy(newPassword);

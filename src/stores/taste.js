@@ -998,20 +998,42 @@ export const useTasteStore = defineStore('taste', () => {
 
       const profileData = {
         user_id: user.value.id,
-        name: profileName,
+        name: profileName || `Profile ${new Date().toLocaleDateString()}`,
         taste_input: tasteInput.value,
         parsed_taste: parsedTaste.value,
+        recommendations: recommendations.value,
+        created_at: new Date().toISOString()
       };
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .insert([profileData])
-        .select();
+      // Try to save to Supabase first
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .insert([profileData])
+          .select();
 
-      if (error) throw error;
+        if (error) throw error;
 
-      savedProfiles.value.push(data[0]);
-      return data[0];
+        // Add to local state
+        savedProfiles.value.push(data[0]);
+        console.log('Profile saved to Supabase:', data[0]);
+        return data[0];
+      } catch (supabaseError) {
+        console.warn('Supabase save failed, using local storage:', supabaseError);
+        
+        // Fallback to local storage
+        const localProfile = {
+          ...profileData,
+          id: Date.now().toString()
+        };
+        
+        const existingProfiles = JSON.parse(localStorage.getItem('tasteProfiles') || '[]');
+        existingProfiles.push(localProfile);
+        localStorage.setItem('tasteProfiles', JSON.stringify(existingProfiles));
+        
+        savedProfiles.value.push(localProfile);
+        return localProfile;
+      }
 
     } catch (error) {
       console.error('Error saving taste profile:', error);
@@ -1234,6 +1256,127 @@ export const useTasteStore = defineStore('taste', () => {
     entitySearchResults.value = {};
   }
   
+  // Save individual recommendation
+  function saveRecommendation(recommendation, category) {
+    const savedItem = {
+      id: Date.now().toString(),
+      recommendation,
+      category,
+      savedAt: new Date().toISOString(),
+      userId: user.value?.id
+    };
+
+    // Add to saved recommendations
+    savedRecommendations.value.push(savedItem);
+
+    // Save to localStorage as backup
+    try {
+      localStorage.setItem('savedRecommendations', JSON.stringify(savedRecommendations.value));
+    } catch (error) {
+      console.warn('Could not save to localStorage:', error);
+    }
+
+    // Try to save to Supabase if authenticated
+    if (isAuthenticated.value) {
+      saveSavedRecommendationToSupabase(savedItem).catch(error => {
+        console.warn('Could not save to Supabase:', error);
+      });
+    }
+
+    return savedItem;
+  }
+
+  // Save to Supabase
+  async function saveSavedRecommendationToSupabase(savedItem) {
+    try {
+      const { error } = await supabase
+        .from('saved_recommendations')
+        .insert([{
+          user_id: savedItem.userId,
+          recommendation_data: savedItem.recommendation,
+          category: savedItem.category,
+          saved_at: savedItem.savedAt
+        }]);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving to Supabase:', error);
+      throw error;
+    }
+  }
+
+  // Get user statistics
+  function getUserStats() {
+    return {
+      profileCount: savedProfiles.value.length,
+      savedRecommendations: savedRecommendations.value.length,
+      categoriesExplored: Object.keys(parsedTaste.value).length,
+      averageMatch: calculateAverageMatch(recommendations.value),
+      joinDate: user.value?.created_at ? new Date(user.value.created_at).toLocaleDateString() : 'Unknown'
+    };
+  }
+
+  // Search profiles
+  function searchProfiles(query) {
+    if (!query) return savedProfiles.value;
+    
+    const lowerQuery = query.toLowerCase();
+    return savedProfiles.value.filter(profile => 
+      profile.name.toLowerCase().includes(lowerQuery) ||
+      profile.taste_input.toLowerCase().includes(lowerQuery) ||
+      (profile.tags && profile.tags.some(tag => tag.toLowerCase().includes(lowerQuery)))
+    );
+  }
+
+  // Get profile analytics
+  function getProfileAnalytics(profileId) {
+    const profile = savedProfiles.value.find(p => p.id === profileId);
+    if (!profile) return null;
+
+    return {
+      profile,
+      categories: Object.keys(profile.parsed_taste || {}),
+      tags: profile.tags || [],
+      matchScore: profile.match_score || 0,
+      createdAt: profile.created_at,
+      recommendationCount: Object.values(profile.recommendations || {}).flat().length
+    };
+  }
+
+  // Helper function to extract tags from taste
+  function extractTagsFromTaste(taste) {
+    const tags = [];
+    Object.entries(taste).forEach(([category, value]) => {
+      if (typeof value === 'string') {
+        tags.push(category, ...value.split(' ').filter(word => word.length > 3));
+      } else if (Array.isArray(value)) {
+        tags.push(category, ...value.flat());
+      }
+    });
+    return [...new Set(tags)]; // Remove duplicates
+  }
+
+  // Helper function to calculate average match score
+  function calculateAverageMatch(recommendations) {
+    if (!recommendations || Object.keys(recommendations).length === 0) return 0;
+    
+    let totalMatch = 0;
+    let count = 0;
+    
+    Object.values(recommendations).forEach(categoryRecs => {
+      if (Array.isArray(categoryRecs)) {
+        categoryRecs.forEach(rec => {
+          if (rec.match) {
+            totalMatch += rec.match;
+            count++;
+          }
+        });
+      }
+    });
+    
+    return count > 0 ? Math.round(totalMatch / count) : 0;
+  }
+
   // Initialize auth on store creation
   initAuth();
 
@@ -1272,6 +1415,11 @@ export const useTasteStore = defineStore('taste', () => {
     logout,
     updateUserProfile,
     updateUserPassword,
+    getUserStats,
+    searchProfiles,
+    getProfileAnalytics,
+    extractTagsFromTaste,
+    calculateAverageMatch,
     reset,
     isAuthModalOpen
   };
