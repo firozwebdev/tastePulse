@@ -11,7 +11,7 @@
         </p>
         
         <!-- Taste Input Form -->
-        <div class="mt-12 bg-white dark:bg-dark-card rounded-xl shadow-card-light dark:shadow-card-dark p-6 md:p-8 max-w-2xl mx-auto border border-gray-100 dark:border-dark-border animate-slide-in-bottom delay-300 animate-pulse-glow">
+        <div class="mt-12 bg-white dark:bg-dark-card rounded-xl shadow-card-light dark:shadow-card-dark p-6 md:p-8 max-w-2xl mx-auto border border-gray-100 dark:border-dark-border animate-slide-in-bottom delay-300">
           <h2 class="text-2xl font-display font-semibold mb-4 text-gray-800 dark:text-white animate-slide-in-left delay-400">
             Tell us what you love
           </h2>

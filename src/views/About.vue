@@ -243,8 +243,8 @@
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 flex gap-4 hover:shadow-taste transition-all duration-300 transform hover:-translate-y-1">
-            <div class="w-20 h-20 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden flex-shrink-0">
-              <img src="https://source.unsplash.com/random/100x100?person" alt="Team member" class="w-full h-full object-cover" loading="lazy" />
+            <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center">
+              <span class="text-2xl font-bold text-white">SA</span>
             </div>
             <div>
               <h3 class="font-semibold text-lg text-gray-900 dark:text-white">Sabuz Ahmed</h3>
@@ -273,8 +273,8 @@
           </div>
           
           <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 flex gap-4 hover:shadow-taste transition-all duration-300 transform hover:-translate-y-1">
-            <div class="w-20 h-20 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden flex-shrink-0">
-              <img src="https://source.unsplash.com/random/100x100?developer" alt="Team member" class="w-full h-full object-cover" loading="lazy" />
+            <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-teal-600 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center">
+              <span class="text-2xl font-bold text-white">AR</span>
             </div>
             <div>
               <h3 class="font-semibold text-lg text-gray-900 dark:text-white">Aisha Rahman</h3>
@@ -332,6 +332,9 @@
         </div>
       </div>
     </div>
+
+    <!-- Contact Form Modal -->
+    <ContactForm v-if="showContactForm" @close="showContactForm = false" />
   </div>
 </template>
 
@@ -341,6 +344,3 @@ import ContactForm from '../components/ContactForm.vue';
 
 const showContactForm = ref(false);
 </script>
-
-<!-- Contact Form Modal -->
-<ContactForm v-if="showContactForm" @close="showContactForm = false" />

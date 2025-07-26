@@ -2,7 +2,7 @@
 import { ref, onMounted, watch, getCurrentInstance, provide } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import NotificationManager from './components/NotificationManager.vue';
-import LanguageSelector from './components/LanguageSelector.vue';
+
 import AuthModal from './components/AuthModal.vue';
 import FeedbackWidget from './components/FeedbackWidget.vue';
 import { useTheme } from './composables/useTheme.js';
@@ -27,8 +27,7 @@ function closeAuthModal() {
   }
 }
 
-// Language state
-const selectedLanguage = ref('en');
+
 
 // Toggle mobile menu
 function toggleMobileMenu() {
@@ -49,16 +48,16 @@ function openSignup() {
 }
 
 async function handleLogout() {
-  await tasteStore.logout();
-  router.push('/');
+  try {
+    await tasteStore.logout();
+    notificationService.success('Logged Out', 'You have been successfully logged out.');
+    router.push('/');
+  } catch (error) {
+    notificationService.error('Logout Failed', 'Could not log you out. Please try again.');
+  }
 }
 
-// Change language
-function changeLanguage(langCode) {
-  selectedLanguage.value = langCode;
-  // In a real app, this would trigger translations to be loaded
-  console.log(`Language changed to: ${langCode}`);
-}
+
 
 // Close mobile menu when route changes
 const route = useRoute();
@@ -196,12 +195,7 @@ onMounted(() => {
               </button>
             </div>
             
-            <!-- Language Selector -->
-            <LanguageSelector 
-              :selected-language="selectedLanguage" 
-              @change="changeLanguage"
-              class="hidden md:block"
-            />
+
             
             <!-- Dark mode toggle -->
             <button 
@@ -272,16 +266,7 @@ onMounted(() => {
           </router-link>
         </div>
         
-        <!-- Mobile Language Selector -->
-        <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700">
-          <div class="flex items-center justify-between">
-            <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Language</span>
-            <LanguageSelector 
-              :selected-language="selectedLanguage" 
-              @change="changeLanguage"
-            />
-          </div>
-        </div>
+
       </div>
     </header>
     
