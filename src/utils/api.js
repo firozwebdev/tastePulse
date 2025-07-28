@@ -332,4 +332,65 @@ function generateMockRecommendations(category, taste) {
   }));
 }
 
-export default api;
+// Real API functions that call Netlify functions
+const realApi = {
+  async parseText(input) {
+    try {
+      console.log('Calling real parse-taste API with input:', input);
+      const response = await api.post('/.netlify/functions/parse-taste', { input });
+      console.log('Parse-taste API response:', response.data);
+      return { data: response.data };
+    } catch (error) {
+      console.error('Error calling parse-taste API:', error);
+      throw error;
+    }
+  },
+
+  async getRecommendations(parsedTaste) {
+    try {
+      console.log('Calling real get-recommendations API with parsed taste:', parsedTaste);
+      const response = await api.post('/.netlify/functions/get-recommendations', { parsedTaste });
+      console.log('Get-recommendations API response:', response.data);
+      return { data: response.data };
+    } catch (error) {
+      console.error('Error calling get-recommendations API:', error);
+      throw error;
+    }
+  },
+
+  async searchEntities(category, query) {
+    try {
+      console.log(`Searching entities for category: ${category}, query: ${query}`);
+      // For now, use mock data for entity search as we don't have a real endpoint
+      return await mockApi.searchEntities(category, query);
+    } catch (error) {
+      console.error('Error searching entities:', error);
+      throw error;
+    }
+  },
+
+  async validateEntities(entities) {
+    try {
+      console.log('Validating entities:', entities);
+      // For now, use mock data for entity validation as we don't have a real endpoint
+      return await mockApi.validateEntities(entities);
+    } catch (error) {
+      console.error('Error validating entities:', error);
+      throw error;
+    }
+  },
+
+  async processStructuredInput(structuredInput) {
+    try {
+      console.log('Processing structured input:', structuredInput);
+      // For now, use mock data for structured input as we don't have a real endpoint
+      return await mockApi.processStructuredInput(structuredInput);
+    } catch (error) {
+      console.error('Error processing structured input:', error);
+      throw error;
+    }
+  }
+};
+
+// Export the real API functions
+export default realApi;

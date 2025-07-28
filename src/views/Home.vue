@@ -142,6 +142,31 @@
                 Try a Sample
               </BaseButton>
             </div>
+            
+            <!-- Login Required Message -->
+            <div v-if="!tasteStore.isAuthenticated" class="mt-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <div class="flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <div class="flex-grow">
+                  <p class="text-sm font-medium text-amber-800 dark:text-amber-200">
+                    Please sign in to discover your taste profile
+                  </p>
+                  <p class="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                    Create an account or sign in to save your preferences and get personalized recommendations.
+                  </p>
+                </div>
+                <BaseButton
+                  variant="outline"
+                  size="sm"
+                  @click="tasteStore.isAuthModalOpen = true"
+                  class="ml-auto flex-shrink-0 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-800/30"
+                >
+                  Sign In
+                </BaseButton>
+              </div>
+            </div>
           </form>
         </div>
       </div>

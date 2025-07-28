@@ -401,34 +401,39 @@ export const useTasteStore = defineStore('taste', () => {
     }
   }
   
-  // Mock function to simulate Qloo API recommendations
+  // Get recommendations from Qloo API or mock data
   async function getQlooRecommendations(parsedTaste) {
-    // In a real app, this would call the Qloo API
     console.log('Getting recommendations from Qloo:', parsedTaste);
     
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Generate mock recommendations based on parsed taste
-    const mockRecommendations = {};
-    
-    if (parsedTaste.music) {
-      mockRecommendations.music = generateMusicRecommendations(parsedTaste.music);
+    if (ENABLE_MOCK_API) {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Generate mock recommendations based on parsed taste
+      const mockRecommendations = {};
+      
+      if (parsedTaste.music) {
+        mockRecommendations.music = generateMusicRecommendations(parsedTaste.music);
+      }
+      
+      if (parsedTaste.food) {
+        mockRecommendations.food = generateFoodRecommendations(parsedTaste.food);
+      }
+      
+      if (parsedTaste.book) {
+        mockRecommendations.book = generateBookRecommendations(parsedTaste.book);
+      }
+      
+      if (parsedTaste.travel) {
+        mockRecommendations.travel = generateTravelRecommendations(parsedTaste.travel);
+      }
+      
+      return mockRecommendations;
+    } else {
+      // Call the real Qloo API via Netlify function
+      const response = await api.getRecommendations(parsedTaste);
+      return response.data;
     }
-    
-    if (parsedTaste.food) {
-      mockRecommendations.food = generateFoodRecommendations(parsedTaste.food);
-    }
-    
-    if (parsedTaste.book) {
-      mockRecommendations.book = generateBookRecommendations(parsedTaste.book);
-    }
-    
-    if (parsedTaste.travel) {
-      mockRecommendations.travel = generateTravelRecommendations(parsedTaste.travel);
-    }
-    
-    return mockRecommendations;
   }
   
   // Helper functions to generate mock recommendations
@@ -1158,22 +1163,37 @@ export const useTasteStore = defineStore('taste', () => {
   // Check if user is already logged in on page load
   async function initAuth() {
     try {
-      const { data } = await supabase.auth.getSession();
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.warn('Auth session error:', error);
+        // Continue without authentication if there's a session error
+        return;
+      }
+      
       if (data?.session) {
         await setUser(data.session.user);
       }
       
       // Set up auth state change listener
       supabase.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
-          await setUser(session.user);
-        } else if (event === 'SIGNED_OUT') {
-          isAuthenticated.value = false;
-          user.value = null;
+        try {
+          if (event === 'SIGNED_IN' && session) {
+            await setUser(session.user);
+          } else if (event === 'SIGNED_OUT') {
+            isAuthenticated.value = false;
+            user.value = null;
+            savedProfiles.value = [];
+            savedRecommendations.value = [];
+          }
+        } catch (error) {
+          console.warn('Auth state change error:', error);
+          // Don't break the app if auth state change fails
         }
       });
     } catch (error) {
       console.error('Error initializing auth:', error);
+      // App should continue to work even if auth initialization fails
     }
   }
   
@@ -1276,11 +1296,10 @@ export const useTasteStore = defineStore('taste', () => {
       console.warn('Could not save to localStorage:', error);
     }
 
-    // Try to save to Supabase if authenticated
+    // Supabase saving disabled due to schema mismatch
+    // Using localStorage as primary storage until database schema is fixed
     if (isAuthenticated.value) {
-      saveSavedRecommendationToSupabase(savedItem).catch(error => {
-        console.warn('Could not save to Supabase:', error);
-      });
+      console.log('Supabase saving disabled - using localStorage only');
     }
 
     return savedItem;
@@ -1288,54 +1307,12 @@ export const useTasteStore = defineStore('taste', () => {
 
   // Save to Supabase
   async function saveSavedRecommendationToSupabase(savedItem) {
-    try {
-      // First, try to get or create a profile for this user
-      let profileId = null;
-      
-      if (savedProfiles.value.length > 0) {
-        // Use the most recent profile
-        profileId = savedProfiles.value[savedProfiles.value.length - 1].id;
-      } else {
-        // Create a temporary profile for saving recommendations
-        const tempProfile = {
-          user_id: savedItem.userId,
-          name: 'Quick Save Profile',
-          taste_input: 'Saved recommendations',
-          parsed_taste: {},
-          recommendations: {}
-        };
-        
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .insert([tempProfile])
-          .select()
-          .single();
-          
-        if (profileError) {
-          console.warn('Could not create profile, using fallback:', profileError);
-          // Fallback: save without profile_id (will need to modify schema)
-          profileId = 1; // Use a default profile ID
-        } else {
-          profileId = profileData.id;
-          savedProfiles.value.push(profileData);
-        }
-      }
-
-      const { error } = await supabase
-        .from('saved_recommendations')
-        .insert([{
-          user_id: savedItem.userId,
-          profile_id: profileId,
-          recommendation_data: savedItem.recommendation,
-          category: savedItem.category,
-          created_at: savedItem.savedAt
-        }]);
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error saving to Supabase:', error);
-      throw error;
-    }
+    // Supabase saving is completely disabled due to schema mismatch
+    // The database schema doesn't have the 'saved_at' column that the code expects
+    console.log('Supabase saving disabled - schema mismatch with saved_at column');
+    
+    // Return a resolved promise to avoid breaking the calling code
+    return Promise.resolve();
   }
 
   // Get user statistics

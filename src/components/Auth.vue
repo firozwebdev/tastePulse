@@ -267,13 +267,29 @@ async function handleSubmit() {
   } catch (error) {
     console.error('Authentication error:', error);
     
-    // Handle specific error cases
+    // Handle specific error cases with better user guidance
     if (error.message.includes('Invalid login credentials')) {
       notification.error('Authentication failed', 'Invalid email or password. Please try again.');
+    } else if (error.message.includes('Database error saving new user')) {
+      notification.error(
+        'Account Creation Issue', 
+        'There was a problem creating your account. Please try again in a moment, or contact support if the issue persists.'
+      );
+    } else if (error.message.includes('User already registered')) {
+      notification.info(
+        'Account Already Exists', 
+        'This email is already registered. Please sign in instead.'
+      );
+      emit('mode-change', 'login');
+    } else if (error.message.includes('Email not confirmed')) {
+      notification.info(
+        'Email Confirmation Required', 
+        'Please check your email and click the confirmation link before signing in.'
+      );
     } else {
       notification.error(
-        'Authentication error', 
-        error.message || 'An error occurred during authentication. Please try again.'
+        'Authentication Error', 
+        error.message || 'An unexpected error occurred. Please try again or contact support.'
       );
     }
   } finally {

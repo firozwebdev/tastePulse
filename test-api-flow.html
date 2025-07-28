@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test TastePulse API Flow</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .loading { background-color: #fff3cd; border-color: #ffeaa7; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🧪 TastePulse API Flow Test</h1>
+    
+    <div class="test-section">
+        <h2>Step 1: Test Gemini Text Parsing</h2>
+        <button onclick="testGeminiParsing()">Test Gemini API</button>
+        <div id="gemini-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 2: Test Qloo Recommendations</h2>
+        <button onclick="testQlooRecommendations()">Test Qloo API</button>
+        <div id="qloo-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 3: Test Complete Flow</h2>
+        <button onclick="testCompleteFlow()">Test Full Gemini → Qloo Flow</button>
+        <div id="complete-result"></div>
+    </div>
+
+    <script>
+        async function testGeminiParsing() {
+            const resultDiv = document.getElementById('gemini-result');
+            resultDiv.className = 'loading';
+            resultDiv.innerHTML = '<p>🔄 Testing Gemini API...</p>';
+            
+            try {
+                const response = await fetch('/.netlify/functions/parse-taste', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        input: "I love lo-fi beats, Japanese ramen, Murakami novels, and exploring hidden cafes in Kyoto."
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                resultDiv.className = 'success';
+                resultDiv.innerHTML = `
+                    <h3>✅ Gemini API Success!</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `
+                    <h3>❌ Gemini API Error</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+        
+        async function testQlooRecommendations() {
+            const resultDiv = document.getElementById('qloo-result');
+            resultDiv.className = 'loading';
+            resultDiv.innerHTML = '<p>🔄 Testing Qloo API...</p>';
+            
+            try {
+                const sampleParsedTaste = {
+                    music: "lo-fi beats",
+                    food: "Japanese ramen",
+                    book: "Murakami novels",
+                    travel: "Kyoto, Japan"
+                };
+                
+                const response = await fetch('/.netlify/functions/get-recommendations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ parsedTaste: sampleParsedTaste })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                resultDiv.className = 'success';
+                resultDiv.innerHTML = `
+                    <h3>✅ Qloo API Success!</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `
+                    <h3>❌ Qloo API Error</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+        
+        async function testCompleteFlow() {
+            const resultDiv = document.getElementById('complete-result');
+            resultDiv.className = 'loading';
+            resultDiv.innerHTML = '<p>🔄 Testing Complete Flow: Gemini → Qloo...</p>';
+            
+            try {
+                // Step 1: Parse with Gemini
+                resultDiv.innerHTML += '<p>Step 1: Parsing with Gemini...</p>';
+                const parseResponse = await fetch('/.netlify/functions/parse-taste', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        input: "I'm into indie rock music, Mediterranean cuisine, science fiction books, and hiking in national parks."
+                    })
+                });
+                
+                if (!parseResponse.ok) {
+                    throw new Error(`Parse API error: ${parseResponse.status}`);
+                }
+                
+                const parsedData = await parseResponse.json();
+                resultDiv.innerHTML += '<p>✅ Gemini parsing successful!</p>';
+                
+                // Step 2: Get recommendations with Qloo
+                resultDiv.innerHTML += '<p>Step 2: Getting recommendations from Qloo...</p>';
+                const recsResponse = await fetch('/.netlify/functions/get-recommendations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ parsedTaste: parsedData })
+                });
+                
+                if (!recsResponse.ok) {
+                    throw new Error(`Recommendations API error: ${recsResponse.status}`);
+                }
+                
+                const recommendations = await recsResponse.json();
+                
+                resultDiv.className = 'success';
+                resultDiv.innerHTML = `
+                    <h3>🎉 Complete Flow Success!</h3>
+                    <h4>Parsed Taste (Gemini):</h4>
+                    <pre>${JSON.stringify(parsedData, null, 2)}</pre>
+                    <h4>Recommendations (Qloo):</h4>
+                    <pre>${JSON.stringify(recommendations, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `
+                    <h3>❌ Complete Flow Error</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
