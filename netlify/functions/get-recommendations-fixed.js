@@ -1,34 +1,144 @@
 const fetch = require('node-fetch');
 
-// Helper function to get static images for recommendations
-function getStaticImageForCategory(category, itemName = '') {
-  const categoryImages = {
-    music: [
-      'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&h=300&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1598387993281-cecf8b71a8f8?w=400&h=300&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&h=300&auto=format&fit=crop'
-    ],
-    food: [
-      'https://images.unsplash.com/photo-1557872943-16a5ac26437e?w=400&h=300&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&h=300&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1552611052-33e04de081de?w=400&h=300&auto=format&fit=crop'
-    ],
-    book: [
-      'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=300&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1541963463532-d68292c34b19?w=400&h=300&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=300&auto=format&fit=crop'
-    ],
-    travel: [
-      'https://images.unsplash.com/photo-1492571350019-22de08371fd3?w=400&h=300&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=400&h=300&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=400&h=300&auto=format&fit=crop'
-    ]
+// Enhanced function to get contextual images based on content
+function getContextualImage(category, itemName = '', description = '', qlooData = {}) {
+  // First, try to use Qloo's own image if available
+  if (qlooData.properties && qlooData.properties.image && qlooData.properties.image.url) {
+    return qlooData.properties.image.url;
+  }
+
+  // Create search terms based on item name and description
+  const searchTerms = [];
+  const lowerName = itemName.toLowerCase();
+  const lowerDesc = description.toLowerCase();
+  
+  // Extract specific terms for better image matching
+  if (category === 'music') {
+    // Music-specific image matching
+    if (lowerName.includes('jazz') || lowerDesc.includes('jazz')) {
+      searchTerms.push('jazz-music', 'saxophone', 'jazz-band');
+    } else if (lowerName.includes('rock') || lowerDesc.includes('rock')) {
+      searchTerms.push('rock-concert', 'electric-guitar', 'rock-band');
+    } else if (lowerName.includes('classical') || lowerDesc.includes('classical')) {
+      searchTerms.push('orchestra', 'piano', 'classical-music');
+    } else if (lowerName.includes('pop') || lowerDesc.includes('pop')) {
+      searchTerms.push('pop-music', 'microphone', 'concert');
+    } else if (lowerName.includes('hip-hop') || lowerName.includes('rap')) {
+      searchTerms.push('hip-hop', 'microphone', 'urban-music');
+    } else if (lowerName.includes('electronic') || lowerName.includes('edm')) {
+      searchTerms.push('dj', 'electronic-music', 'synthesizer');
+    } else {
+      searchTerms.push('music', 'headphones', 'vinyl-records');
+    }
+  } else if (category === 'food') {
+    // Food-specific image matching
+    if (lowerName.includes('pizza') || lowerDesc.includes('pizza')) {
+      searchTerms.push('pizza', 'italian-food', 'pizzeria');
+    } else if (lowerName.includes('ramen') || lowerDesc.includes('ramen')) {
+      searchTerms.push('ramen', 'japanese-food', 'noodles');
+    } else if (lowerName.includes('italian') || lowerDesc.includes('italian')) {
+      searchTerms.push('italian-cuisine', 'pasta', 'italian-restaurant');
+    } else if (lowerName.includes('japanese') || lowerDesc.includes('japanese')) {
+      searchTerms.push('japanese-food', 'sushi', 'japanese-restaurant');
+    } else if (lowerName.includes('chinese') || lowerDesc.includes('chinese')) {
+      searchTerms.push('chinese-food', 'dim-sum', 'chinese-restaurant');
+    } else if (lowerName.includes('mexican') || lowerDesc.includes('mexican')) {
+      searchTerms.push('mexican-food', 'tacos', 'mexican-restaurant');
+    } else if (lowerName.includes('indian') || lowerDesc.includes('indian')) {
+      searchTerms.push('indian-food', 'curry', 'indian-restaurant');
+    } else if (lowerName.includes('thai') || lowerDesc.includes('thai')) {
+      searchTerms.push('thai-food', 'pad-thai', 'thai-restaurant');
+    } else {
+      searchTerms.push('restaurant', 'food', 'dining');
+    }
+  } else if (category === 'book' || category === 'books') {
+    // Book-specific image matching
+    if (lowerName.includes('mystery') || lowerDesc.includes('mystery')) {
+      searchTerms.push('mystery-books', 'detective', 'crime-novel');
+    } else if (lowerName.includes('sci-fi') || lowerName.includes('science fiction')) {
+      searchTerms.push('science-fiction', 'space', 'futuristic');
+    } else if (lowerName.includes('fantasy') || lowerDesc.includes('fantasy')) {
+      searchTerms.push('fantasy-books', 'magic', 'medieval');
+    } else if (lowerName.includes('romance') || lowerDesc.includes('romance')) {
+      searchTerms.push('romance-novel', 'love-story', 'romantic');
+    } else if (lowerName.includes('horror') || lowerDesc.includes('horror')) {
+      searchTerms.push('horror-books', 'dark', 'scary');
+    } else if (lowerName.includes('biography') || lowerDesc.includes('biography')) {
+      searchTerms.push('biography', 'memoir', 'life-story');
+    } else {
+      searchTerms.push('books', 'library', 'reading');
+    }
+  } else if (category === 'travel') {
+    // Travel-specific image matching
+    if (lowerName.includes('tokyo') || lowerDesc.includes('tokyo')) {
+      searchTerms.push('tokyo', 'japan', 'japanese-city');
+    } else if (lowerName.includes('paris') || lowerDesc.includes('paris')) {
+      searchTerms.push('paris', 'eiffel-tower', 'france');
+    } else if (lowerName.includes('london') || lowerDesc.includes('london')) {
+      searchTerms.push('london', 'big-ben', 'england');
+    } else if (lowerName.includes('new york') || lowerDesc.includes('new york')) {
+      searchTerms.push('new-york', 'manhattan', 'skyscrapers');
+    } else if (lowerName.includes('beach') || lowerDesc.includes('beach')) {
+      searchTerms.push('beach', 'ocean', 'tropical');
+    } else if (lowerName.includes('mountain') || lowerDesc.includes('mountain')) {
+      searchTerms.push('mountains', 'hiking', 'nature');
+    } else if (lowerName.includes('museum') || lowerDesc.includes('museum')) {
+      searchTerms.push('museum', 'art-gallery', 'culture');
+    } else {
+      searchTerms.push('travel', 'destination', 'adventure');
+    }
+  }
+
+  // Generate contextual Unsplash URL
+  const searchTerm = searchTerms[0] || category;
+  const fallbackTerm = searchTerms[1] || 'lifestyle';
+  
+  // Use Unsplash's search API with specific terms
+  const contextualImages = {
+    // Music images
+    'jazz-music': 'https://images.unsplash.com/photo-1415201364774-f6f0bb35f28f?w=400&h=300&auto=format&fit=crop',
+    'saxophone': 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&h=300&auto=format&fit=crop',
+    'rock-concert': 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=400&h=300&auto=format&fit=crop',
+    'electric-guitar': 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=400&h=300&auto=format&fit=crop',
+    'orchestra': 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=400&h=300&auto=format&fit=crop',
+    'piano': 'https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=400&h=300&auto=format&fit=crop',
+    'dj': 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=300&auto=format&fit=crop',
+    'vinyl-records': 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&auto=format&fit=crop',
+    
+    // Food images
+    'pizza': 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&auto=format&fit=crop',
+    'ramen': 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?w=400&h=300&auto=format&fit=crop',
+    'italian-cuisine': 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=400&h=300&auto=format&fit=crop',
+    'japanese-food': 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=400&h=300&auto=format&fit=crop',
+    'sushi': 'https://images.unsplash.com/photo-1553621042-f6e147245754?w=400&h=300&auto=format&fit=crop',
+    'chinese-food': 'https://images.unsplash.com/photo-1526318896980-cf78c088247c?w=400&h=300&auto=format&fit=crop',
+    'mexican-food': 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&auto=format&fit=crop',
+    'indian-food': 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400&h=300&auto=format&fit=crop',
+    'thai-food': 'https://images.unsplash.com/photo-1559314809-0f31657def5e?w=400&h=300&auto=format&fit=crop',
+    
+    // Book images
+    'mystery-books': 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=300&auto=format&fit=crop',
+    'science-fiction': 'https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?w=400&h=300&auto=format&fit=crop',
+    'fantasy-books': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&auto=format&fit=crop',
+    'romance-novel': 'https://images.unsplash.com/photo-1518481612222-68bbe828ecd1?w=400&h=300&auto=format&fit=crop',
+    'horror-books': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&auto=format&fit=crop',
+    'biography': 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&h=300&auto=format&fit=crop',
+    
+    // Travel images
+    'tokyo': 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400&h=300&auto=format&fit=crop',
+    'paris': 'https://images.unsplash.com/photo-1502602898536-47ad22581b52?w=400&h=300&auto=format&fit=crop',
+    'london': 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=400&h=300&auto=format&fit=crop',
+    'new-york': 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=400&h=300&auto=format&fit=crop',
+    'beach': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=300&auto=format&fit=crop',
+    'mountains': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&auto=format&fit=crop',
+    'museum': 'https://images.unsplash.com/photo-1554907984-15263bfd63bd?w=400&h=300&auto=format&fit=crop'
   };
 
-  const images = categoryImages[category] || categoryImages.music;
-  const nameHash = itemName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const index = nameHash % images.length;
-  return images[index];
+  // Return contextual image or fallback
+  return contextualImages[searchTerm] || 
+         contextualImages[fallbackTerm] || 
+         contextualImages[category] || 
+         'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&h=300&auto=format&fit=crop';
 }
 
 // Function to call the working Qloo /search endpoint
@@ -140,24 +250,27 @@ function processQlooSearchResults(qlooData, category, originalQuery) {
       itemCategory = mainType.charAt(0).toUpperCase() + mainType.slice(1);
     }
     
+    // Create qlooData object for image selection
+    const qlooDataForImage = {
+      entity_id: item.entity_id,
+      popularity: item.popularity,
+      types: item.types,
+      location: location,
+      properties: properties,
+      tags: item.tags || []
+    };
+
     return {
       name: name,
       description: description,
       category: itemCategory,
       match: match,
-      image: getStaticImageForCategory(category, name),
+      image: getContextualImage(category, name, description, qlooDataForImage),
       source: 'qloo',
       id: item.entity_id || item.id || `qloo_${Date.now()}_${index}`,
       
       // Include additional Qloo data for debugging/future use
-      qlooData: {
-        entity_id: item.entity_id,
-        popularity: item.popularity,
-        types: item.types,
-        location: location,
-        properties: properties,
-        tags: item.tags || []
-      }
+      qlooData: qlooDataForImage
     };
   });
 
