@@ -469,9 +469,279 @@
         </transition>
       </div>
       
-      <!-- Time Travel Mode Section -->
-      <div v-if="Object.keys(recommendations).length > 0" class="mt-12">
+      <!-- Revolutionary Features Section -->
+      <div v-if="Object.keys(recommendations).length > 0" class="mt-12 space-y-12">
+        
+        <!-- AI Taste Personality Section -->
+        <div class="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl p-8">
+          <div class="text-center mb-8">
+            <h3 class="text-3xl font-display font-bold text-gray-900 dark:text-white mb-2">
+              🎭 Your Cultural Personality
+            </h3>
+            <p class="text-gray-600 dark:text-gray-400">
+              Discover your unique cultural personality type - like Myers-Briggs for culture
+            </p>
+          </div>
+          
+          <div v-if="tastePersonality" class="max-w-4xl mx-auto">
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-6 mb-6 text-center">
+              <div class="text-6xl mb-4">{{ tastePersonality.personality_type.icon }}</div>
+              <h4 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                {{ tastePersonality.personality_type.name }}
+              </h4>
+              <p class="text-gray-600 dark:text-gray-400 mb-4">
+                {{ tastePersonality.personality_type.description }}
+              </p>
+              <div class="flex flex-wrap justify-center gap-2">
+                <span 
+                  v-for="trait in tastePersonality.personality_type.traits" 
+                  :key="trait"
+                  class="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full text-sm"
+                >
+                  {{ trait }}
+                </span>
+              </div>
+            </div>
+            
+            <!-- Personality Insights -->
+            <div v-if="tastePersonality.insights.primary_insights.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div 
+                v-for="insight in tastePersonality.insights.primary_insights" 
+                :key="insight.type"
+                class="bg-white dark:bg-gray-800 rounded-lg p-4"
+              >
+                <div class="font-semibold text-gray-900 dark:text-white mb-2">
+                  {{ insight.message }}
+                </div>
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div 
+                    class="bg-purple-600 h-2 rounded-full transition-all duration-1000"
+                    :style="{ width: insight.strength + '%' }"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div v-else class="text-center">
+            <button 
+              @click="discoverPersonality" 
+              :disabled="isDiscoveringPersonality"
+              class="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors disabled:opacity-50"
+            >
+              {{ isDiscoveringPersonality ? 'Analyzing...' : '🎭 Discover My Cultural Personality' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Global Cultural Heatmap Section -->
+        <div class="bg-gradient-to-r from-blue-50 to-teal-50 dark:from-blue-900/20 dark:to-teal-900/20 rounded-2xl p-8">
+          <div class="text-center mb-8">
+            <h3 class="text-3xl font-display font-bold text-gray-900 dark:text-white mb-2">
+              🌍 Global Cultural Trends
+            </h3>
+            <p class="text-gray-600 dark:text-gray-400">
+              See what's trending culturally around the world right now
+            </p>
+          </div>
+          
+          <div v-if="culturalHeatmap" class="max-w-6xl mx-auto">
+            <!-- Most Active Region -->
+            <div v-if="culturalHeatmap.insights.length > 0" class="bg-white dark:bg-gray-800 rounded-xl p-6 mb-6">
+              <div class="text-center">
+                <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                  🔥 {{ culturalHeatmap.insights[0].message }}
+                </h4>
+                <p class="text-gray-600 dark:text-gray-400">
+                  Cultural Temperature: {{ culturalHeatmap.insights[0].data?.cultural_temperature || 'High' }}°
+                </p>
+              </div>
+            </div>
+            
+            <!-- Regional Trends Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div 
+                v-for="(regionData, regionId) in Object.entries(culturalHeatmap.global_trends).slice(0, 6)" 
+                :key="regionId"
+                class="bg-white dark:bg-gray-800 rounded-lg p-4"
+              >
+                <h5 class="font-bold text-gray-900 dark:text-white mb-2">
+                  {{ regionData[1].region_info.name }}
+                </h5>
+                <div class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                  Temperature: {{ regionData[1].cultural_temperature }}°
+                </div>
+                <div class="space-y-1">
+                  <div 
+                    v-for="item in regionData[1].trending_now.slice(0, 2)" 
+                    :key="item.name"
+                    class="text-xs bg-gray-100 dark:bg-gray-700 rounded px-2 py-1"
+                  >
+                    {{ item.category }}: {{ item.name }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div v-else class="text-center">
+            <button 
+              @click="loadCulturalHeatmap" 
+              :disabled="isLoadingHeatmap"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors disabled:opacity-50"
+            >
+              {{ isLoadingHeatmap ? 'Loading...' : '🌍 View Global Cultural Trends' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- AI Taste Curator Section -->
+        <div class="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-8">
+          <div class="text-center mb-8">
+            <h3 class="text-3xl font-display font-bold text-gray-900 dark:text-white mb-2">
+              🤖 Your AI Taste Curator
+            </h3>
+            <p class="text-gray-600 dark:text-gray-400">
+              Chat with your personal cultural assistant for personalized recommendations
+            </p>
+          </div>
+          
+          <div class="max-w-4xl mx-auto">
+            <!-- Curator Chat Interface -->
+            <div v-if="curatorResponse" class="bg-white dark:bg-gray-800 rounded-xl p-6 mb-6">
+              <div class="flex items-start gap-4 mb-4">
+                <div class="text-3xl">{{ curatorResponse.curator_personality.emoji }}</div>
+                <div class="flex-1">
+                  <h4 class="font-bold text-gray-900 dark:text-white mb-1">
+                    {{ curatorResponse.curator_personality.name }}
+                  </h4>
+                  <p class="text-gray-600 dark:text-gray-400 text-sm mb-3">
+                    {{ curatorResponse.curator_response.greeting }}
+                  </p>
+                  <p class="text-gray-800 dark:text-gray-200">
+                    {{ curatorResponse.curator_response.main_message }}
+                  </p>
+                </div>
+              </div>
+              
+              <!-- Curator Recommendations -->
+              <div v-if="curatorResponse.recommendations.primary.length > 0" class="space-y-3">
+                <h5 class="font-semibold text-gray-900 dark:text-white">Curator's Recommendations:</h5>
+                <div 
+                  v-for="rec in curatorResponse.recommendations.primary.slice(0, 2)" 
+                  :key="rec.name"
+                  class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4"
+                >
+                  <h6 class="font-medium text-gray-900 dark:text-white">{{ rec.name }}</h6>
+                  <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">{{ rec.description }}</p>
+                  <p class="text-xs text-green-600 dark:text-green-400 italic">{{ rec.reasoning }}</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Chat Input -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-4">
+              <div class="flex gap-3">
+                <input 
+                  v-model="curatorInput"
+                  @keyup.enter="chatWithCurator"
+                  placeholder="Ask your curator anything about culture..."
+                  class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                >
+                <button 
+                  @click="chatWithCurator" 
+                  :disabled="isChatting || !curatorInput.trim()"
+                  class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
+                >
+                  {{ isChatting ? 'Thinking...' : 'Ask' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Generative Taste Art Section -->
+        <div class="bg-gradient-to-r from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 rounded-2xl p-8">
+          <div class="text-center mb-8">
+            <h3 class="text-3xl font-display font-bold text-gray-900 dark:text-white mb-2">
+              🎨 Your Taste Art
+            </h3>
+            <p class="text-gray-600 dark:text-gray-400">
+              AI-generated visual art representing your unique cultural DNA
+            </p>
+          </div>
+          
+          <div v-if="generatedArt" class="max-w-4xl mx-auto">
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-6 mb-6">
+              <div class="text-center mb-4">
+                <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                  {{ generatedArt.art_data.algorithm.name }}
+                </h4>
+                <p class="text-gray-600 dark:text-gray-400 text-sm">
+                  {{ generatedArt.art_data.algorithm.description }}
+                </p>
+              </div>
+              
+              <!-- SVG Art Display -->
+              <div class="flex justify-center mb-4">
+                <div 
+                  class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
+                  v-html="generatedArt.svg_code"
+                ></div>
+              </div>
+              
+              <!-- Art Interpretation -->
+              <div v-if="generatedArt.art_interpretation" class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <h5 class="font-semibold text-gray-900 dark:text-white mb-2">Art Interpretation:</h5>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                  {{ generatedArt.art_interpretation.overall_meaning }}
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-500">
+                  {{ generatedArt.art_interpretation.color_meaning }}
+                </p>
+              </div>
+              
+              <!-- Share Art -->
+              <div class="text-center mt-4">
+                <button 
+                  @click="shareArt" 
+                  class="bg-pink-600 hover:bg-pink-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+                >
+                  Share My Art
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div v-else class="text-center">
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Choose Art Style:
+              </label>
+              <select 
+                v-model="selectedArtAlgorithm" 
+                class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="dna_helix">Cultural DNA Helix</option>
+                <option value="taste_mandala">Taste Mandala</option>
+                <option value="cultural_constellation">Cultural Constellation</option>
+                <option value="flavor_waves">Flavor Waves</option>
+                <option value="heritage_tree">Heritage Tree</option>
+              </select>
+            </div>
+            <button 
+              @click="generateTasteArt" 
+              :disabled="isGeneratingArt"
+              class="bg-pink-600 hover:bg-pink-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors disabled:opacity-50"
+            >
+              {{ isGeneratingArt ? 'Creating Art...' : '🎨 Generate My Taste Art' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Time Travel Mode Section -->
         <TimeTravelMode :recommendations="recommendations" />
+        
       </div>
     </div>
 
@@ -515,6 +785,18 @@ const isSurpriseVisible = ref(false);
 // Details Modal State
 const showDetailsModal = ref(false);
 const selectedRecommendation = ref(null);
+
+// Revolutionary features data
+const tastePersonality = ref(null);
+const isDiscoveringPersonality = ref(false);
+const culturalHeatmap = ref(null);
+const isLoadingHeatmap = ref(false);
+const curatorResponse = ref(null);
+const curatorInput = ref('');
+const isChatting = ref(false);
+const generatedArt = ref(null);
+const selectedArtAlgorithm = ref('dna_helix');
+const isGeneratingArt = ref(false);
 
 // Get data from the store
 const tasteInput = computed(() => tasteStore.tasteInput);
@@ -620,6 +902,159 @@ const explorationLevel = computed(() => {
   if (categoryCount >= 2) return 'Moderate Explorer';
   return 'Focused Explorer';
 });
+
+// Revolutionary Features Functions
+async function discoverPersonality() {
+  if (Object.keys(recommendations.value).length === 0) return;
+  
+  isDiscoveringPersonality.value = true;
+  
+  try {
+    console.log('🎭 Discovering taste personality...');
+    
+    const response = await fetch('/.netlify/functions/taste-personality', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        recommendations: recommendations.value,
+        tasteBridges: []
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    tastePersonality.value = data;
+    
+    console.log(`✨ Discovered personality: ${data.personality_type.name}`);
+  } catch (error) {
+    console.error('Error discovering personality:', error);
+  } finally {
+    isDiscoveringPersonality.value = false;
+  }
+}
+
+async function loadCulturalHeatmap() {
+  isLoadingHeatmap.value = true;
+  
+  try {
+    console.log('🌍 Loading cultural heatmap...');
+    
+    const response = await fetch('/.netlify/functions/cultural-heatmap', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    culturalHeatmap.value = data;
+    
+    console.log(`✨ Loaded heatmap for ${Object.keys(data.global_trends).length} regions`);
+  } catch (error) {
+    console.error('Error loading heatmap:', error);
+  } finally {
+    isLoadingHeatmap.value = false;
+  }
+}
+
+async function chatWithCurator() {
+  if (!curatorInput.value.trim()) return;
+  
+  isChatting.value = true;
+  const userMessage = curatorInput.value;
+  curatorInput.value = '';
+  
+  try {
+    console.log('🤖 Chatting with AI curator...');
+    
+    const response = await fetch('/.netlify/functions/ai-taste-curator', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        user_input: userMessage,
+        curator_personality: 'explorer',
+        context: {
+          current_recommendations: recommendations.value
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    curatorResponse.value = data;
+    
+    console.log(`✨ Curator responded with ${data.recommendations.primary.length} recommendations`);
+  } catch (error) {
+    console.error('Error chatting with curator:', error);
+  } finally {
+    isChatting.value = false;
+  }
+}
+
+async function generateTasteArt() {
+  if (Object.keys(recommendations.value).length === 0) return;
+  
+  isGeneratingArt.value = true;
+  
+  try {
+    console.log('🎨 Generating taste art...');
+    
+    const response = await fetch('/.netlify/functions/generative-taste-art', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        taste_profile: { recommendations: recommendations.value },
+        algorithm: selectedArtAlgorithm.value
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    generatedArt.value = data;
+    
+    console.log(`✨ Generated ${data.art_data.algorithm.name} with ${data.art_data.elements.length} elements`);
+  } catch (error) {
+    console.error('Error generating art:', error);
+  } finally {
+    isGeneratingArt.value = false;
+  }
+}
+
+function shareArt() {
+  if (!generatedArt.value) return;
+  
+  const shareText = generatedArt.value.sharing_text;
+  
+  if (navigator.share) {
+    navigator.share({
+      title: 'My Taste Art',
+      text: shareText,
+      url: window.location.href
+    });
+  } else {
+    navigator.clipboard.writeText(shareText);
+    // Could add a toast notification here
+  }
+}
 
 // Set the active category to the first available one
 onMounted(async () => {

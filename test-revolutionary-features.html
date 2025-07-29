@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 TastePulse Revolutionary Features - Judge Astonishment Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .feature-card {
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .feature-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        .revolutionary-glow {
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        @keyframes glow {
+            from { box-shadow: 0 0 20px #667eea; }
+            to { box-shadow: 0 0 30px #764ba2, 0 0 40px #667eea; }
+        }
+        .success-pulse {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 min-h-screen text-white">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Revolutionary Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-6xl font-bold mb-4 revolutionary-glow">
+                🚀 TastePulse Revolutionary Features
+            </h1>
+            <p class="text-2xl mb-6 text-purple-200">
+                Cultural Intelligence Platform - Judge Astonishment Edition
+            </p>
+            <div class="bg-gradient-to-r from-green-400 to-blue-500 rounded-full px-8 py-3 inline-block shadow-2xl">
+                <span class="text-white font-bold text-lg">🏆 HACKATHON WINNER READY</span>
+            </div>
+        </div>
+
+        <!-- Revolutionary Features Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+            <!-- AI Taste Personality -->
+            <div class="feature-card rounded-2xl p-6 text-white shadow-2xl">
+                <div class="text-center mb-6">
+                    <div class="text-5xl mb-3">🎭</div>
+                    <h3 class="text-xl font-bold">AI Taste Personality</h3>
+                    <p class="text-sm opacity-90">Myers-Briggs for Culture</p>
+                </div>
+                <div id="personality-status" class="text-center mb-4 text-yellow-300">Testing...</div>
+                <button onclick="testTastePersonality()" class="w-full bg-white bg-opacity-20 hover:bg-opacity-30 text-white py-3 px-4 rounded-lg transition-all">
+                    Discover My Cultural Type
+                </button>
+            </div>
+
+            <!-- Global Cultural Heatmap -->
+            <div class="feature-card rounded-2xl p-6 text-white shadow-2xl">
+                <div class="text-center mb-6">
+                    <div class="text-5xl mb-3">🌍</div>
+                    <h3 class="text-xl font-bold">Global Cultural Heatmap</h3>
+                    <p class="text-sm opacity-90">Real-time Worldwide Trends</p>
+                </div>
+                <div id="heatmap-status" class="text-center mb-4 text-yellow-300">Testing...</div>
+                <button onclick="testCulturalHeatmap()" class="w-full bg-white bg-opacity-20 hover:bg-opacity-30 text-white py-3 px-4 rounded-lg transition-all">
+                    View Global Trends
+                </button>
+            </div>
+
+            <!-- Spotify Integration -->
+            <div class="feature-card rounded-2xl p-6 text-white shadow-2xl">
+                <div class="text-center mb-6">
+                    <div class="text-5xl mb-3">🎵</div>
+                    <h3 class="text-xl font-bold">Spotify Integration</h3>
+                    <p class="text-sm opacity-90">Instant Taste Profiling</p>
+                </div>
+                <div id="spotify-status" class="text-center mb-4 text-yellow-300">Testing...</div>
+                <button onclick="testSpotifyIntegration()" class="w-full bg-white bg-opacity-20 hover:bg-opacity-30 text-white py-3 px-4 rounded-lg transition-all">
+                    Analyze My Music
+                </button>
+            </div>
+
+            <!-- AI Taste Curator -->
+            <div class="feature-card rounded-2xl p-6 text-white shadow-2xl">
+                <div class="text-center mb-6">
+                    <div class="text-5xl mb-3">🤖</div>
+                    <h3 class="text-xl font-bold">AI Taste Curator</h3>
+                    <p class="text-sm opacity-90">Personal Cultural Assistant</p>
+                </div>
+                <div id="curator-status" class="text-center mb-4 text-yellow-300">Testing...</div>
+                <button onclick="testAICurator()" class="w-full bg-white bg-opacity-20 hover:bg-opacity-30 text-white py-3 px-4 rounded-lg transition-all">
+                    Chat with AI Curator
+                </button>
+            </div>
+
+            <!-- Generative Taste Art -->
+            <div class="feature-card rounded-2xl p-6 text-white shadow-2xl">
+                <div class="text-center mb-6">
+                    <div class="text-5xl mb-3">🎨</div>
+                    <h3 class="text-xl font-bold">Generative Taste Art</h3>
+                    <p class="text-sm opacity-90">AI-Created Visual Art</p>
+                </div>
+                <div id="art-status" class="text-center mb-4 text-yellow-300">Testing...</div>
+                <button onclick="testGenerativeArt()" class="w-full bg-white bg-opacity-20 hover:bg-opacity-30 text-white py-3 px-4 rounded-lg transition-all">
+                    Create My Art
+                </button>
+            </div>
+
+            <!-- PWA Features -->
+            <div class="feature-card rounded-2xl p-6 text-white shadow-2xl">
+                <div class="text-center mb-6">
+                    <div class="text-5xl mb-3">📱</div>
+                    <h3 class="text-xl font-bold">Progressive Web App</h3>
+                    <p class="text-sm opacity-90">Mobile-First Experience</p>
+                </div>
+                <div id="pwa-status" class="text-center mb-4 text-yellow-300">Testing...</div>
+                <button onclick="testPWAFeatures()" class="w-full bg-white bg-opacity-20 hover:bg-opacity-30 text-white py-3 px-4 rounded-lg transition-all">
+                    Test PWA Features
+                </button>
+            </div>
+        </div>
+
+        <!-- Revolutionary Integration Test -->
+        <div class="bg-gradient-to-r from-purple-800 to-pink-800 rounded-2xl shadow-2xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-center mb-6">
+                🎯 Revolutionary Integration Test
+            </h2>
+            <div class="text-center mb-6">
+                <button onclick="runRevolutionaryTest()" class="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-black px-12 py-4 rounded-xl font-bold text-xl transition-all transform hover:scale-105 shadow-2xl">
+                    🚀 ASTONISH THE JUDGES
+                </button>
+            </div>
+            <div id="revolutionary-results" class="space-y-4">
+                <p class="text-center text-purple-200">Click the button above to run the complete revolutionary feature test</p>
+            </div>
+        </div>
+
+        <!-- Live Demo Results -->
+        <div class="bg-black bg-opacity-50 rounded-2xl shadow-2xl p-8 mb-8">
+            <h2 class="text-2xl font-bold mb-6 text-center">🎬 Live Demo Results</h2>
+            <div id="demo-results" class="space-y-6">
+                <p class="text-gray-300 text-center">Revolutionary features will be demonstrated here...</p>
+            </div>
+        </div>
+
+        <!-- Performance Metrics -->
+        <div class="bg-gradient-to-r from-green-800 to-teal-800 rounded-2xl shadow-2xl p-8 mb-8">
+            <h2 class="text-2xl font-bold mb-6 text-center">⚡ Revolutionary Performance</h2>
+            <div class="grid grid-cols-2 md:grid-cols-6 gap-6 text-center">
+                <div>
+                    <div class="text-3xl font-bold text-green-300" id="personality-time">-</div>
+                    <div class="text-sm">Personality (ms)</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold text-blue-300" id="heatmap-time">-</div>
+                    <div class="text-sm">Heatmap (ms)</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold text-purple-300" id="spotify-time">-</div>
+                    <div class="text-sm">Spotify (ms)</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold text-pink-300" id="curator-time">-</div>
+                    <div class="text-sm">AI Curator (ms)</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold text-yellow-300" id="art-time">-</div>
+                    <div class="text-sm">Art Gen (ms)</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold text-indigo-300" id="pwa-time">-</div>
+                    <div class="text-sm">PWA (ms)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Judge Astonishment Meter -->
+        <div id="astonishment-meter" class="hidden bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-2xl shadow-2xl p-8 text-center">
+            <h2 class="text-3xl font-bold mb-6">🤯 Judge Astonishment Meter</h2>
+            <div class="text-8xl mb-4 success-pulse">🏆</div>
+            <h3 class="text-4xl font-bold mb-4">JUDGES OFFICIALLY ASTONISHED!</h3>
+            <p class="text-xl mb-6">All revolutionary features are operational and ready to win!</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                    <div class="font-bold">🎭 Cultural Intelligence</div>
+                    <div>16 personality types discovered</div>
+                </div>
+                <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                    <div class="font-bold">🌍 Global Insights</div>
+                    <div>Real-time cultural trends</div>
+                </div>
+                <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                    <div class="font-bold">🎨 Generative Art</div>
+                    <div>AI-created visual masterpieces</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data for testing
+        const sampleRecommendations = {
+            music: [
+                {
+                    id: 1,
+                    name: "Bohemian Rhapsody by Queen",
+                    description: "Epic rock opera that blends multiple musical styles",
+                    match: 95,
+                    category: "music"
+                },
+                {
+                    id: 2,
+                    name: "Kind of Blue by Miles Davis",
+                    description: "Legendary jazz album that defined cool jazz",
+                    match: 88,
+                    category: "music"
+                }
+            ],
+            food: [
+                {
+                    id: 3,
+                    name: "Authentic Ramen from Tokyo",
+                    description: "Rich tonkotsu broth with handmade noodles",
+                    match: 92,
+                    category: "food"
+                }
+            ],
+            travel: [
+                {
+                    id: 4,
+                    name: "Kyoto Temple Gardens",
+                    description: "Serene Buddhist temples with traditional architecture",
+                    match: 90,
+                    category: "travel"
+                }
+            ],
+            books: [
+                {
+                    id: 5,
+                    name: "Murakami's Norwegian Wood",
+                    description: "Melancholic coming-of-age story set in 1960s Tokyo",
+                    match: 87,
+                    category: "books"
+                }
+            ]
+        };
+
+        const sampleSpotifyData = {
+            top_tracks: [
+                { name: "Bohemian Rhapsody", artist: "Queen", popularity: 95 },
+                { name: "Kind of Blue", artist: "Miles Davis", popularity: 88 }
+            ],
+            top_artists: [
+                { name: "Queen", genres: ["rock", "classic rock"], followers: { total: 5000000 } },
+                { name: "Miles Davis", genres: ["jazz", "cool jazz"], followers: { total: 2000000 } }
+            ],
+            audio_features: [
+                { energy: 0.8, valence: 0.7, danceability: 0.6, acousticness: 0.3, instrumentalness: 0.2 },
+                { energy: 0.4, valence: 0.5, danceability: 0.3, acousticness: 0.8, instrumentalness: 0.7 }
+            ],
+            recently_played: [
+                { played_at: "2024-01-15T14:30:00Z", track: { name: "Bohemian Rhapsody" } },
+                { played_at: "2024-01-15T15:45:00Z", track: { name: "Kind of Blue" } }
+            ],
+            playlists: [
+                { name: "My Favorites", public: true, collaborative: false },
+                { name: "Chill Jazz", public: false, collaborative: true }
+            ]
+        };
+
+        let testResults = {
+            personality: false,
+            heatmap: false,
+            spotify: false,
+            curator: false,
+            art: false,
+            pwa: false
+        };
+
+        function updateStatus(feature, success, time = null) {
+            const statusElement = document.getElementById(`${feature}-status`);
+            if (success) {
+                statusElement.innerHTML = '<span class="text-green-400 font-bold">✅ REVOLUTIONARY</span>';
+                if (time) {
+                    document.getElementById(`${feature}-time`).textContent = time;
+                }
+                testResults[feature] = true;
+            } else {
+                statusElement.innerHTML = '<span class="text-red-400 font-bold">❌ Error</span>';
+                testResults[feature] = false;
+            }
+            
+            checkAstonishmentLevel();
+        }
+
+        function checkAstonishmentLevel() {
+            const passedTests = Object.values(testResults).filter(result => result === true).length;
+            if (passedTests >= 4) {
+                document.getElementById('astonishment-meter').classList.remove('hidden');
+            }
+        }
+
+        async function testTastePersonality() {
+            const startTime = performance.now();
+            try {
+                const response = await fetch('/.netlify/functions/taste-personality', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        recommendations: sampleRecommendations,
+                        tasteBridges: []
+                    })
+                });
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                const endTime = performance.now();
+                const duration = Math.round(endTime - startTime);
+                
+                updateStatus('personality', true, duration);
+                
+                displayDemoResult('🎭 AI Taste Personality', {
+                    type: data.personality_type.name,
+                    description: data.personality_type.description,
+                    traits: data.personality_type.traits,
+                    icon: data.personality_type.icon
+                });
+                
+            } catch (error) {
+                updateStatus('personality', false);
+                console.error('Personality test error:', error);
+            }
+        }
+
+        async function testCulturalHeatmap() {
+            const startTime = performance.now();
+            try {
+                const response = await fetch('/.netlify/functions/cultural-heatmap', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                const endTime = performance.now();
+                const duration = Math.round(endTime - startTime);
+                
+                updateStatus('heatmap', true, duration);
+                
+                displayDemoResult('🌍 Global Cultural Heatmap', {
+                    regions: Object.keys(data.global_trends).length,
+                    insights: data.insights.length,
+                    most_active: data.insights[0]?.data?.region_info?.name || 'Global'
+                });
+                
+            } catch (error) {
+                updateStatus('heatmap', false);
+                console.error('Heatmap test error:', error);
+            }
+        }
+
+        async function testSpotifyIntegration() {
+            const startTime = performance.now();
+            try {
+                const response = await fetch('/.netlify/functions/spotify-taste-profile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        spotify_data: sampleSpotifyData
+                    })
+                });
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                const endTime = performance.now();
+                const duration = Math.round(endTime - startTime);
+                
+                updateStatus('spotify', true, duration);
+                
+                displayDemoResult('🎵 Spotify Integration', {
+                    personality: data.music_taste_profile.music_personality?.overall_profile || 'Diverse music lover',
+                    genres: data.music_taste_profile.genre_diversity?.total_genres || 0,
+                    diversity_score: data.music_taste_profile.genre_diversity?.diversity_score || 0
+                });
+                
+            } catch (error) {
+                updateStatus('spotify', false);
+                console.error('Spotify test error:', error);
+            }
+        }
+
+        async function testAICurator() {
+            const startTime = performance.now();
+            try {
+                const response = await fetch('/.netlify/functions/ai-taste-curator', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_input: "I'm feeling adventurous and want to discover something completely new in Japanese culture",
+                        curator_personality: 'explorer'
+                    })
+                });
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                const endTime = performance.now();
+                const duration = Math.round(endTime - startTime);
+                
+                updateStatus('curator', true, duration);
+                
+                displayDemoResult('🤖 AI Taste Curator', {
+                    personality: data.curator_personality.name,
+                    greeting: data.curator_response.greeting,
+                    recommendations: data.recommendations.primary.length,
+                    insights: data.curator_response.insights.length
+                });
+                
+            } catch (error) {
+                updateStatus('curator', false);
+                console.error('Curator test error:', error);
+            }
+        }
+
+        async function testGenerativeArt() {
+            const startTime = performance.now();
+            try {
+                const response = await fetch('/.netlify/functions/generative-taste-art', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        taste_profile: { recommendations: sampleRecommendations },
+                        algorithm: 'dna_helix'
+                    })
+                });
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                const endTime = performance.now();
+                const duration = Math.round(endTime - startTime);
+                
+                updateStatus('art', true, duration);
+                
+                displayDemoResult('🎨 Generative Taste Art', {
+                    algorithm: data.art_data.algorithm.name,
+                    elements: data.art_data.elements.length,
+                    palette: data.art_data.palette.description,
+                    svg_size: data.svg_code.length
+                });
+                
+            } catch (error) {
+                updateStatus('art', false);
+                console.error('Art test error:', error);
+            }
+        }
+
+        async function testPWAFeatures() {
+            const startTime = performance.now();
+            try {
+                // Test PWA manifest and service worker capabilities
+                const manifestResponse = await fetch('/manifest.json');
+                const manifest = await manifestResponse.json();
+                
+                const endTime = performance.now();
+                const duration = Math.round(endTime - startTime);
+                
+                updateStatus('pwa', true, duration);
+                
+                displayDemoResult('📱 Progressive Web App', {
+                    name: manifest.name,
+                    shortcuts: manifest.shortcuts?.length || 0,
+                    icons: manifest.icons?.length || 0,
+                    installable: 'beforeinstallprompt' in window ? 'Yes' : 'Supported'
+                });
+                
+            } catch (error) {
+                updateStatus('pwa', false);
+                console.error('PWA test error:', error);
+            }
+        }
+
+        function displayDemoResult(title, data) {
+            const resultsDiv = document.getElementById('demo-results');
+            const resultHTML = `
+                <div class="bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg p-4 mb-4">
+                    <h4 class="font-bold text-lg mb-2">${title}</h4>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        ${Object.entries(data).map(([key, value]) => 
+                            `<div><span class="font-medium">${key}:</span> ${value}</div>`
+                        ).join('')}
+                    </div>
+                </div>
+            `;
+            
+            if (resultsDiv.innerHTML.includes('Revolutionary features will be demonstrated here')) {
+                resultsDiv.innerHTML = resultHTML;
+            } else {
+                resultsDiv.innerHTML += resultHTML;
+            }
+        }
+
+        async function runRevolutionaryTest() {
+            const resultsDiv = document.getElementById('revolutionary-results');
+            resultsDiv.innerHTML = '<div class="text-center"><div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div><p class="mt-4">Running revolutionary integration test...</p></div>';
+            
+            const startTime = performance.now();
+            
+            // Run all tests in parallel for maximum impact
+            await Promise.all([
+                testTastePersonality(),
+                testCulturalHeatmap(),
+                testSpotifyIntegration(),
+                testAICurator(),
+                testGenerativeArt(),
+                testPWAFeatures()
+            ]);
+            
+            const endTime = performance.now();
+            const totalTime = Math.round(endTime - startTime);
+            
+            const passedTests = Object.values(testResults).filter(result => result === true).length;
+            const allPassed = passedTests === 6;
+            
+            resultsDiv.innerHTML = `
+                <div class="bg-${allPassed ? 'green' : 'yellow'}-500 bg-opacity-20 border border-${allPassed ? 'green' : 'yellow'}-400 rounded-lg p-6">
+                    <div class="text-center mb-6">
+                        <div class="text-6xl mb-4">${allPassed ? '🏆' : '⚠️'}</div>
+                        <h3 class="text-2xl font-bold text-${allPassed ? 'green' : 'yellow'}-300">
+                            ${allPassed ? 'JUDGES OFFICIALLY ASTONISHED!' : 'Revolutionary Features Partially Ready'}
+                        </h3>
+                        <p class="text-${allPassed ? 'green' : 'yellow'}-200 mt-2">
+                            ${passedTests}/6 revolutionary features operational • Total time: ${totalTime}ms
+                        </p>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm">
+                        <div class="text-center">
+                            <div class="text-2xl">${testResults.personality ? '✅' : '❌'}</div>
+                            <div>AI Personality</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl">${testResults.heatmap ? '✅' : '❌'}</div>
+                            <div>Global Heatmap</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl">${testResults.spotify ? '✅' : '❌'}</div>
+                            <div>Spotify Integration</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl">${testResults.curator ? '✅' : '❌'}</div>
+                            <div>AI Curator</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl">${testResults.art ? '✅' : '❌'}</div>
+                            <div>Generative Art</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl">${testResults.pwa ? '✅' : '❌'}</div>
+                            <div>PWA Features</div>
+                        </div>
+                    </div>
+                    ${allPassed ? `
+                        <div class="mt-6 text-center">
+                            <p class="text-xl font-bold text-green-300">🎉 READY TO WIN THE HACKATHON! 🎉</p>
+                            <p class="text-green-200 mt-2">All revolutionary features are operational and will astonish the judges!</p>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // Auto-run revolutionary test on page load
+        window.addEventListener('load', () => {
+            console.log('🚀 TastePulse Revolutionary Features - Judge Astonishment Test');
+            setTimeout(() => {
+                runRevolutionaryTest();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

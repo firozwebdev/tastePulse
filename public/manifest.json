@@ -1,0 +1,149 @@
+{
+  "name": "TastePulse - Cultural Intelligence Platform",
+  "short_name": "TastePulse",
+  "description": "Discover your cultural DNA and explore taste connections across music, food, travel, and books",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#8b5cf6",
+  "orientation": "portrait-primary",
+  "categories": ["lifestyle", "entertainment", "social", "personalization"],
+  "lang": "en-US",
+  "dir": "ltr",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/desktop-home.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "TastePulse Home Screen"
+    },
+    {
+      "src": "/screenshots/mobile-results.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Cultural DNA Results"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Discover Taste",
+      "short_name": "Discover",
+      "description": "Start discovering your cultural taste profile",
+      "url": "/?action=discover",
+      "icons": [
+        {
+          "src": "/icons/shortcut-discover.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Time Travel",
+      "short_name": "Time Travel",
+      "description": "Explore your taste through different eras",
+      "url": "/?action=timetravel",
+      "icons": [
+        {
+          "src": "/icons/shortcut-timetravel.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Cultural Heatmap",
+      "short_name": "Heatmap",
+      "description": "View global cultural trends",
+      "url": "/?action=heatmap",
+      "icons": [
+        {
+          "src": "/icons/shortcut-heatmap.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "handle_links": "preferred",
+  "protocol_handlers": [
+    {
+      "protocol": "web+tastepulse",
+      "url": "/share?data=%s"
+    }
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "media",
+          "accept": ["image/*", "audio/*"]
+        }
+      ]
+    }
+  }
+}
