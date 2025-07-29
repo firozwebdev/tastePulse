@@ -2,29 +2,29 @@
 const config = {
   development: {
     API_BASE_URL: 'http://localhost:8080',
-    SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
-    SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
+    SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL || 'https://pzwrocsqwhmgosninpmv.supabase.co',
+    SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6d3JvY3Nxd2htZ29zbmlucG12Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM0NTY2MTEsImV4cCI6MjA2OTAzMjYxMX0.4Sj4xnlfREtx1n1yrDDwQ6EHie0r2X0nmpkYofwvVYk',
     QLOO_API_URL: 'https://api.qloo.com/v1',
     QLOO_API_KEY: 'P6WXhn-98bT0H__jpKNimCEwq1oa6DW8WVtVFj4I_QU',
     GPT_API_URL: 'https://api.openai.com/v1',
-    GPT_API_KEY: import.meta.env.VITE_OPENAI_API_KEY,
+    GPT_API_KEY: 'your-openai-api-key',
     GEMINI_API_URL: 'https://generativelanguage.googleapis.com/v1beta',
     GEMINI_API_KEY: 'AIzaSyBtO2J8lMY7hakS-LeBBhy-Zqhzpb-Iw98',
-    ENABLE_MOCK_API: true,
+    ENABLE_MOCK_API: import.meta.env.VITE_ENABLE_MOCK_API === 'true',
     DEBUG: true
   },
-  
+
   production: {
     API_BASE_URL: 'https://api.tastepulse.app',
-    SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
-    SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
+    SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL || 'https://pzwrocsqwhmgosninpmv.supabase.co',
+    SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6d3JvY3Nxd2htZ29zbmlucG12Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM0NTY2MTEsImV4cCI6MjA2OTAzMjYxMX0.4Sj4xnlfREtx1n1yrDDwQ6EHie0r2X0nmpkYofwvVYk',
     QLOO_API_URL: 'https://api.qloo.com/v1',
     QLOO_API_KEY: import.meta.env.VITE_QLOO_API_KEY,
     GPT_API_URL: 'https://api.openai.com/v1',
     GPT_API_KEY: import.meta.env.VITE_OPENAI_API_KEY,
     GEMINI_API_URL: 'https://generativelanguage.googleapis.com/v1beta',
     GEMINI_API_KEY: import.meta.env.VITE_GEMINI_API_KEY,
-    ENABLE_MOCK_API: false,
+    ENABLE_MOCK_API: import.meta.env.VITE_ENABLE_MOCK_API === 'true',
     DEBUG: false
   }
 };

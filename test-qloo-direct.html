@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>🔬 Direct Qloo API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .success {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+
+        .error {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .loading {
+            border-color: #17a2b8;
+            background: #d1ecf1;
+        }
+
+        button {
+            padding: 12px 24px;
+            margin: 8px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            background: #007bff;
+            color: white;
+        }
+
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+
+        h2 {
+            color: #007bff;
+        }
+
+        .endpoint {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔬 Direct Qloo API Test</h1>
+        <p style="text-align: center; color: #666;">
+            Testing Qloo API endpoints directly to identify the issue
+        </p>
+
+        <div class="test-section">
+            <h2>🎯 API Configuration</h2>
+            <div class="endpoint">API Key: P6WXhn-98bT0H__jpKNimCEwq1oa6DW8WVtVFj4I_QU</div>
+            <div class="endpoint">Base URL: https://hackathon.api.qloo.com</div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 Discover What Qloo Actually Returns</h2>
+            <button onclick="discoverQlooData('jazz')">Discover: Jazz</button>
+            <button onclick="discoverQlooData('pizza')">Discover: Pizza</button>
+            <button onclick="discoverQlooData('tokyo')">Discover: Tokyo</button>
+            <button onclick="discoverQlooData('netflix')">Discover: Netflix</button>
+            <button onclick="discoverQlooData('yoga')">Discover: Yoga</button>
+            <button onclick="discoverQlooData('coffee')">Discover: Coffee</button>
+            <div id="discovery-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Analyze Qloo Response Structure</h2>
+            <button onclick="analyzeQlooStructure()">Analyze Response Structure</button>
+            <div id="structure-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 Test Available Endpoints</h2>
+            <button onclick="testEndpoint('/entities', 'GET', {query: 'pizza'})">Test /entities (no type)</button>
+            <button onclick="testEndpoint('/search', 'GET', {query: 'pizza'})">Test /search</button>
+            <button onclick="testEndpoint('/recommendations', 'GET', {})">Test /recommendations</button>
+            <button onclick="testEndpoint('/categories', 'GET', {})">Test /categories</button>
+            <div id="endpoint-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 Test Authentication Methods</h2>
+            <button onclick="testAuth('X-Api-Key')">Test X-Api-Key Header</button>
+            <button onclick="testAuth('Authorization')">Test Authorization Header</button>
+            <button onclick="testAuth('api_key')">Test api_key Parameter</button>
+            <div id="auth-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 Raw Response Analysis</h2>
+            <button onclick="analyzeRawResponse()">Analyze Raw Response</button>
+            <div id="raw-results"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = 'P6WXhn-98bT0H__jpKNimCEwq1oa6DW8WVtVFj4I_QU';
+        const BASE_URL = 'https://hackathon.api.qloo.com';
+
+        async function testCategory(category, query) {
+            const resultDiv = document.getElementById('category-results');
+            resultDiv.className = 'loading';
+            resultDiv.innerHTML = '<p>🔄 Testing category: ' + (category || 'none') + ' with query: ' + query + '</p>';
+
+            try {
+                let url = `${BASE_URL}/entities?query=${encodeURIComponent(query)}`;
+                if (category) {
+                    url += `&type=${encodeURIComponent(category)}`;
+                }
+
+                console.log('Testing category URL:', url);
+
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-Api-Key': API_KEY,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const responseText = await response.text();
+                let responseData;
+
+                try {
+                    responseData = JSON.parse(responseText);
+                } catch (e) {
+                    responseData = responseText;
+                }
+
+                let resultHTML = `<h3>Category: ${category || 'none'} | Query: ${query}</h3>`;
+                resultHTML += `<p><strong>Status:</strong> ${response.status} ${response.statusText}</p>`;
+                resultHTML += `<p><strong>URL:</strong> ${url}</p>`;
+
+                if (response.ok) {
+                    resultDiv.className = 'success';
+                    resultHTML += '<p><strong>✅ CATEGORY WORKS!</strong></p>';
+
+                    // Show what we got back
+                    if (responseData && responseData.entities) {
+                        resultHTML += `<p><strong>Found ${responseData.entities.length} entities</strong></p>`;
+                    }
+                } else {
+                    resultDiv.className = 'error';
+                    resultHTML += '<p><strong>❌ CATEGORY BLOCKED</strong></p>';
+
+                    // Show the specific error
+                    if (responseData && responseData.error) {
+                        resultHTML += `<p><strong>Error:</strong> ${responseData.error.message}</p>`;
+                    }
+                }
+
+                resultHTML += '<h4>Response:</h4>';
+                resultHTML += '<pre>' + JSON.stringify(responseData, null, 2) + '</pre>';
+
+                resultDiv.innerHTML = resultHTML;
+
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `<h3>❌ Category Test Error</h3><p>${error.message}</p>`;
+            }
+        }
+
+        async function testEndpoint(endpoint, method = 'GET', params = {}) {
+            const resultDiv = document.getElementById('endpoint-results');
+            resultDiv.className = 'loading';
+            resultDiv.innerHTML = '<p>🔄 Testing endpoint: ' + endpoint + '</p>';
+
+            try {
+                const queryString = Object.entries(params)
+                    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+                    .join('&');
+
+                const url = `${BASE_URL}${endpoint}${queryString ? '?' + queryString : ''}`;
+
+                console.log('Testing URL:', url);
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'X-Api-Key': API_KEY,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const responseText = await response.text();
+                let responseData;
+
+                try {
+                    responseData = JSON.parse(responseText);
+                } catch (e) {
+                    responseData = responseText;
+                }
+
+                let resultHTML = `<h3>Endpoint: ${endpoint}</h3>`;
+                resultHTML += `<p><strong>Status:</strong> ${response.status} ${response.statusText}</p>`;
+                resultHTML += `<p><strong>URL:</strong> ${url}</p>`;
+
+                if (response.ok) {
+                    resultDiv.className = 'success';
+                    resultHTML += '<p><strong>✅ SUCCESS!</strong></p>';
+                } else {
+                    resultDiv.className = 'error';
+                    resultHTML += '<p><strong>❌ FAILED</strong></p>';
+                }
+
+                resultHTML += '<h4>Response:</h4>';
+                resultHTML += '<pre>' + JSON.stringify(responseData, null, 2) + '</pre>';
+
+                resultDiv.innerHTML = resultHTML;
+
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `<h3>❌ Network Error</h3><p>${error.message}</p>`;
+            }
+        }
+
+        async function testAuth(authMethod) {
+            const resultDiv = document.getElementById('auth-results');
+            resultDiv.className = 'loading';
+            resultDiv.innerHTML = '<p>🔄 Testing auth method: ' + authMethod + '</p>';
+
+            try {
+                let headers = { 'Content-Type': 'application/json' };
+                let url = `${BASE_URL}/entities?query=jazz&type=music`;
+
+                switch (authMethod) {
+                    case 'X-Api-Key':
+                        headers['X-Api-Key'] = API_KEY;
+                        break;
+                    case 'Authorization':
+                        headers['Authorization'] = `Bearer ${API_KEY}`;
+                        break;
+                    case 'api_key':
+                        url += `&api_key=${API_KEY}`;
+                        break;
+                }
+
+                console.log('Testing auth with headers:', headers);
+                console.log('Testing auth with URL:', url);
+
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: headers
+                });
+
+                const responseText = await response.text();
+                let responseData;
+
+                try {
+                    responseData = JSON.parse(responseText);
+                } catch (e) {
+                    responseData = responseText;
+                }
+
+                let resultHTML = `<h3>Auth Method: ${authMethod}</h3>`;
+                resultHTML += `<p><strong>Status:</strong> ${response.status} ${response.statusText}</p>`;
+
+                if (response.ok) {
+                    resultDiv.className = 'success';
+                    resultHTML += '<p><strong>✅ AUTH SUCCESS!</strong></p>';
+                } else {
+                    resultDiv.className = 'error';
+                    resultHTML += '<p><strong>❌ AUTH FAILED</strong></p>';
+                }
+
+                resultHTML += '<h4>Response:</h4>';
+                resultHTML += '<pre>' + JSON.stringify(responseData, null, 2) + '</pre>';
+
+                resultDiv.innerHTML = resultHTML;
+
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `<h3>❌ Auth Test Error</h3><p>${error.message}</p>`;
+            }
+        }
+
+        async function analyzeRawResponse() {
+            const resultDiv = document.getElementById('raw-results');
+            resultDiv.className = 'loading';
+            resultDiv.innerHTML = '<p>🔄 Analyzing raw response...</p>';
+
+            try {
+                // Test the exact same call that's failing in the logs
+                const url = `${BASE_URL}/entities?query=jazz&type=music`;
+
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-Api-Key': API_KEY,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const responseHeaders = {};
+                for (let [key, value] of response.headers.entries()) {
+                    responseHeaders[key] = value;
+                }
+
+                const responseText = await response.text();
+
+                let resultHTML = '<h3>🔬 Raw Response Analysis</h3>';
+                resultHTML += `<p><strong>Status:</strong> ${response.status} ${response.statusText}</p>`;
+                resultHTML += `<p><strong>URL:</strong> ${url}</p>`;
+
+                resultHTML += '<h4>Response Headers:</h4>';
+                resultHTML += '<pre>' + JSON.stringify(responseHeaders, null, 2) + '</pre>';
+
+                resultHTML += '<h4>Response Body:</h4>';
+                resultHTML += '<pre>' + responseText + '</pre>';
+
+                if (response.status === 403) {
+                    resultHTML += '<h4>🚨 Forbidden Error Analysis:</h4>';
+                    resultHTML += '<ul>';
+                    resultHTML += '<li>API Key might be invalid or expired</li>';
+                    resultHTML += '<li>API Key might not have permission for this endpoint</li>';
+                    resultHTML += '<li>Hackathon API might have different authentication requirements</li>';
+                    resultHTML += '<li>Rate limiting might be in effect</li>';
+                    resultHTML += '</ul>';
+                }
+
+                if (response.ok) {
+                    resultDiv.className = 'success';
+                } else {
+                    resultDiv.className = 'error';
+                }
+
+                resultDiv.innerHTML = resultHTML;
+
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `<h3>❌ Analysis Error</h3><p>${error.message}</p>`;
+            }
+        }
+
+        async function discoverQlooData(query) {
+            const resultDiv = document.getElementById('discovery-results');
+            resultDiv.className = 'loading';
+            resultDiv.innerHTML = '<p>🔄 Discovering what Qloo returns for: ' + query + '</p>';
+
+            try {
+                const url = `${BASE_URL}/search?query=${encodeURIComponent(query)}`;
+
+                console.log('Discovery URL:', url);
+
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-Api-Key': API_KEY,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const responseText = await response.text();
+                let responseData;
+
+                try {
+                    responseData = JSON.parse(responseText);
+                } catch (e) {
+                    responseData = { raw: responseText };
+                }
+
+                let resultHTML = `<h3>🔍 Discovery Results for: ${query}</h3>`;
+                resultHTML += `<p><strong>Status:</strong> ${response.status} ${response.statusText}</p>`;
+
+                if (response.ok && responseData) {
+                    resultDiv.className = 'success';
+                    resultHTML += '<p><strong>✅ SUCCESS! Here\'s what Qloo actually returns:</strong></p>';
+
+                    // Analyze the structure
+                    if (responseData.results && Array.isArray(responseData.results)) {
+                        resultHTML += `<p><strong>Found ${responseData.results.length} results</strong></p>`;
+
+                        // Show categories that Qloo actually uses
+                        const categories = [...new Set(responseData.results.map(item => item.category || item.type || 'unknown'))];
+                        resultHTML += `<p><strong>Qloo Categories:</strong> ${categories.join(', ')}</p>`;
+
+                        // Show first few results
+                        resultHTML += '<h4>Sample Results:</h4>';
+                        responseData.results.slice(0, 3).forEach((item, index) => {
+                            resultHTML += `<div style="background: #f8f9fa; padding: 10px; margin: 5px 0; border-radius: 4px;">`;
+                            resultHTML += `<strong>${item.name || item.title || 'Unknown'}</strong><br>`;
+                            resultHTML += `<em>Category: ${item.category || item.type || 'unknown'}</em><br>`;
+                            if (item.description) resultHTML += `<small>${item.description}</small><br>`;
+                            if (item.id) resultHTML += `<small>ID: ${item.id}</small>`;
+                            resultHTML += `</div>`;
+                        });
+                    }
+
+                    // Show available fields
+                    if (responseData.results && responseData.results.length > 0) {
+                        const sampleItem = responseData.results[0];
+                        const fields = Object.keys(sampleItem);
+                        resultHTML += `<p><strong>Available Fields:</strong> ${fields.join(', ')}</p>`;
+                    }
+                } else {
+                    resultDiv.className = 'error';
+                    resultHTML += '<p><strong>❌ FAILED</strong></p>';
+                }
+
+                resultHTML += '<h4>Full Response:</h4>';
+                resultHTML += '<pre>' + JSON.stringify(responseData, null, 2) + '</pre>';
+
+                resultDiv.innerHTML = resultHTML;
+
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `<h3>❌ Discovery Error</h3><p>${error.message}</p>`;
+            }
+        }
+
+        async function analyzeQlooStructure() {
+            const resultDiv = document.getElementById('structure-results');
+            resultDiv.className = 'loading';
+            resultDiv.innerHTML = '<p>🔄 Analyzing Qloo response structure...</p>';
+
+            try {
+                const testQueries = ['pizza', 'jazz', 'tokyo', 'netflix', 'yoga'];
+                const allResults = [];
+                const allCategories = new Set();
+                const allFields = new Set();
+
+                for (const query of testQueries) {
+                    try {
+                        const url = `${BASE_URL}/search?query=${encodeURIComponent(query)}`;
+                        const response = await fetch(url, {
+                            method: 'GET',
+                            headers: {
+                                'X-Api-Key': API_KEY,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.results && Array.isArray(data.results)) {
+                                allResults.push(...data.results);
+
+                                data.results.forEach(item => {
+                                    if (item.category) allCategories.add(item.category);
+                                    if (item.type) allCategories.add(item.type);
+                                    Object.keys(item).forEach(field => allFields.add(field));
+                                });
+                            }
+                        }
+                    } catch (e) {
+                        console.warn(`Failed to analyze ${query}:`, e);
+                    }
+                }
+
+                let resultHTML = '<h3>📊 Qloo Structure Analysis</h3>';
+
+                if (allResults.length > 0) {
+                    resultDiv.className = 'success';
+
+                    resultHTML += `<p><strong>Total Results Analyzed:</strong> ${allResults.length}</p>`;
+
+                    resultHTML += '<h4>🏷️ Categories Qloo Actually Uses:</h4>';
+                    resultHTML += '<div style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin: 10px 0;">';
+                    resultHTML += '<ul>';
+                    [...allCategories].sort().forEach(cat => {
+                        resultHTML += `<li><strong>${cat}</strong></li>`;
+                    });
+                    resultHTML += '</ul>';
+                    resultHTML += '</div>';
+
+                    resultHTML += '<h4>📋 Available Data Fields:</h4>';
+                    resultHTML += '<div style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin: 10px 0;">';
+                    resultHTML += '<p>' + [...allFields].sort().join(', ') + '</p>';
+                    resultHTML += '</div>';
+
+                    // Category mapping suggestions
+                    resultHTML += '<h4>💡 Suggested Category Mapping:</h4>';
+                    resultHTML += '<div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 10px 0;">';
+                    resultHTML += '<p>Based on what Qloo returns, we should map our categories like this:</p>';
+                    resultHTML += '<ul>';
+                    [...allCategories].forEach(cat => {
+                        let ourCategory = 'unknown';
+                        if (cat.toLowerCase().includes('music') || cat.toLowerCase().includes('artist') || cat.toLowerCase().includes('song')) {
+                            ourCategory = 'music';
+                        } else if (cat.toLowerCase().includes('food') || cat.toLowerCase().includes('restaurant') || cat.toLowerCase().includes('cuisine')) {
+                            ourCategory = 'food';
+                        } else if (cat.toLowerCase().includes('book') || cat.toLowerCase().includes('author') || cat.toLowerCase().includes('literature')) {
+                            ourCategory = 'book';
+                        } else if (cat.toLowerCase().includes('place') || cat.toLowerCase().includes('location') || cat.toLowerCase().includes('destination')) {
+                            ourCategory = 'travel';
+                        } else if (cat.toLowerCase().includes('brand') || cat.toLowerCase().includes('company')) {
+                            ourCategory = 'brand';
+                        }
+                        resultHTML += `<li><strong>${cat}</strong> → <em>${ourCategory}</em></li>`;
+                    });
+                    resultHTML += '</ul>';
+                    resultHTML += '</div>';
+
+                } else {
+                    resultDiv.className = 'error';
+                    resultHTML += '<p><strong>❌ No data could be analyzed</strong></p>';
+                }
+
+                resultDiv.innerHTML = resultHTML;
+
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `<h3>❌ Structure Analysis Error</h3><p>${error.message}</p>`;
+            }
+        }
+
+        // Auto-run discovery on page load
+        window.onload = function () {
+            setTimeout(() => {
+                discoverQlooData('pizza');
+            }, 1000);
+        };
+    </script>
+</body>
+
+</html>

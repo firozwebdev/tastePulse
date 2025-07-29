@@ -58,7 +58,7 @@ export const apiEndpoints = {
 
   // Similar profiles
   getSimilarProfiles: '/api/profiles/similar',
-  
+
   // Structured input
   processStructuredInput: '/api/structured-input'
 };
@@ -137,32 +137,32 @@ export const mockApi = {
 
     return recommendations;
   },
-  
+
   async searchEntities(category, query) {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 800));
-    
+
     // Generate mock search results based on category and query
     const results = [];
     const categories = ['music', 'food', 'book', 'travel'];
-    
+
     if (!categories.includes(category)) {
       return { error: 'Invalid category', results: [] };
     }
-    
+
     if (!query || query.length < 2) {
       return { results: [] };
     }
-    
+
     // Generate 3-7 mock results
     const count = Math.floor(Math.random() * 5) + 3;
-    
+
     for (let i = 0; i < count; i++) {
       const id = `${category}_${Math.floor(Math.random() * 10000)}`;
       let name, description;
-      
+
       // Generate category-specific mock results
-      switch(category) {
+      switch (category) {
         case 'music':
           if (query.toLowerCase().includes('jazz')) {
             name = [`Miles Davis`, `John Coltrane`, `Ella Fitzgerald`, `Duke Ellington`, `Thelonious Monk`][i % 5];
@@ -175,7 +175,7 @@ export const mockApi = {
             description = `${['Popular', 'Emerging', 'Classic', 'Contemporary', 'Fusion'][i % 5]} ${['artist', 'musician', 'composer', 'performer', 'band'][i % 5]}`;
           }
           break;
-          
+
         case 'food':
           if (query.toLowerCase().includes('ramen')) {
             name = [`Tonkotsu Ramen`, `Shoyu Ramen`, `Miso Ramen`, `Shio Ramen`, `Tsukemen`][i % 5];
@@ -188,7 +188,7 @@ export const mockApi = {
             description = `${['Traditional', 'Modern', 'Fusion', 'Gourmet', 'Street'][i % 5]} ${['food', 'dish', 'cuisine', 'delicacy', 'specialty'][i % 5]}`;
           }
           break;
-          
+
         case 'book':
           if (query.toLowerCase().includes('fiction')) {
             name = [`The Great Gatsby`, `To Kill a Mockingbird`, `1984`, `Pride and Prejudice`, `The Catcher in the Rye`][i % 5];
@@ -201,7 +201,7 @@ export const mockApi = {
             description = `${['Award-winning', 'Bestselling', 'Acclaimed', 'Popular', 'Classic'][i % 5]} ${['novel', 'book', 'series', 'anthology', 'publication'][i % 5]}`;
           }
           break;
-          
+
         case 'travel':
           if (query.toLowerCase().includes('japan')) {
             name = [`Tokyo`, `Kyoto`, `Osaka`, `Hokkaido`, `Okinawa`][i % 5];
@@ -215,7 +215,7 @@ export const mockApi = {
           }
           break;
       }
-      
+
       results.push({
         id,
         name,
@@ -225,18 +225,18 @@ export const mockApi = {
         match: Math.floor(Math.random() * 20) + 80 // Match score between 80-99
       });
     }
-    
+
     return { results };
   },
-  
+
   async validateEntities(entities) {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     // Mock validation - in a real API this would check if entities exist in the database
     const validatedEntities = {};
     const categories = ['music', 'food', 'book', 'travel'];
-    
+
     categories.forEach(category => {
       if (entities[category]) {
         // Simulate that 90% of entities are valid
@@ -250,17 +250,17 @@ export const mockApi = {
         }));
       }
     });
-    
+
     return validatedEntities;
   },
-  
+
   async getEntityById(id) {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     // Parse the category from the ID (format: category_number)
     const category = id.split('_')[0];
-    
+
     // Generate a mock entity based on the ID
     return {
       id,
@@ -275,21 +275,21 @@ export const mockApi = {
       }
     };
   },
-  
+
   async processStructuredInput(structuredInput) {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1500));
-    
+
     // Mock processing of structured input
     const recommendations = {};
     const categories = ['music', 'food', 'book', 'travel'];
-    
+
     categories.forEach(category => {
       if (structuredInput[category] && structuredInput[category].length > 0) {
         recommendations[category] = generateMockRecommendations(category, structuredInput[category][0].name);
       }
     });
-    
+
     return recommendations;
   }
 };
@@ -336,8 +336,8 @@ function generateMockRecommendations(category, taste) {
 const realApi = {
   async parseText(input) {
     try {
-      console.log('Calling real parse-taste API with input:', input);
-      const response = await api.post('/.netlify/functions/parse-taste', { input });
+      console.log('Calling simple parse-taste API with input:', input);
+      const response = await api.post('/.netlify/functions/parse-taste-simple', { input });
       console.log('Parse-taste API response:', response.data);
       return { data: response.data };
     } catch (error) {
@@ -349,7 +349,7 @@ const realApi = {
   async getRecommendations(parsedTaste) {
     try {
       console.log('Calling real get-recommendations API with parsed taste:', parsedTaste);
-      const response = await api.post('/.netlify/functions/get-recommendations', { parsedTaste });
+      const response = await api.post('/.netlify/functions/get-recommendations-fixed', { parsedTaste });
       console.log('Get-recommendations API response:', response.data);
       return { data: response.data };
     } catch (error) {

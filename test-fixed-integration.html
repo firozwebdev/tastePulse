@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🎉 Test Fixed Integration</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .test-section { 
+            margin: 20px 0; 
+            padding: 20px; 
+            border: 2px solid #ddd; 
+            border-radius: 8px; 
+            background: white;
+        }
+        .success { border-color: #28a745; background: #d4edda; }
+        .error { border-color: #dc3545; background: #f8d7da; }
+        .loading { border-color: #17a2b8; background: #d1ecf1; }
+        button { 
+            padding: 12px 24px; 
+            margin: 8px; 
+            cursor: pointer; 
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            background: #28a745;
+            color: white;
+        }
+        pre { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 4px; 
+            overflow-x: auto; 
+            font-size: 12px;
+        }
+        h1 { color: #333; text-align: center; }
+        h2 { color: #28a745; }
+        .status-real { background: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+        .status-mock { background: #dc3545; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+        .recommendation { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 8px; 
+            border-left: 4px solid #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 Test Fixed Integration</h1>
+        <p style="text-align: center; color: #666;">
+            Testing the fixed integration that properly handles Gemini's complex response structure
+        </p>
+
+        <div class="test-section">
+            <h2>🧪 Test Complete Fixed Flow</h2>
+            <button onclick="testFixedFlow()">Test Fixed Gemini → Qloo Flow</button>
+            <div id="complete-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 Test Specific Inputs</h2>
+            <button onclick="testSpecificInput('I love lo-fi beats and Japanese ramen')">Test: Lo-fi + Ramen</button>
+            <button onclick="testSpecificInput('I enjoy jazz music and exploring hidden cafes in Kyoto')">Test: Jazz + Kyoto</button>
+            <button onclick="testSpecificInput('I like contemporary fiction and Italian cuisine')">Test: Fiction + Italian</button>
+            <div id="specific-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Results Analysis</h2>
+            <div id="analysis-result"></div>
+        </div>
+    </div>
+
+    <script>
+        async function testFixedFlow() {
+            const resultDiv = document.getElementById('complete-result');
+            resultDiv.className = 'loading';
+            resultDiv.innerHTML = '<p>🔄 Testing fixed integration...</p>';
+
+            try {
+                // Step 1: Parse with Gemini
+                const parseResponse = await fetch('/.netlify/functions/parse-taste', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        input: "I love lo-fi beats, Japanese ramen, contemporary fiction books, and exploring hidden cafes in Kyoto"
+                    })
+                });
+
+                if (!parseResponse.ok) {
+                    throw new Error(`Parse API error: ${parseResponse.status}`);
+                }
+
+                const parsedData = await parseResponse.json();
+                console.log('Parsed data structure:', parsedData);
+
+                // Step 2: Get recommendations with fixed function
+                const recsResponse = await fetch('/.netlify/functions/get-recommendations-fixed', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ parsedTaste: parsedData })
+                });
+
+                if (!recsResponse.ok) {
+                    throw new Error(`Recommendations API error: ${recsResponse.status}`);
+                }
+
+                const recommendations = await recsResponse.json();
+
+                // Analyze results
+                let resultHTML = '<h3>🎉 Fixed Integration Results</h3>';
+                
+                // Show data source status
+                if (recommendations.metadata && recommendations.metadata.usedMockData) {
+                    const realCategories = Object.entries(recommendations.metadata.usedMockData)
+                        .filter(([cat, isMock]) => !isMock)
+                        .map(([cat]) => cat);
+                    const mockCategories = Object.entries(recommendations.metadata.usedMockData)
+                        .filter(([cat, isMock]) => isMock)
+                        .map(([cat]) => cat);
+
+                    if (realCategories.length > 0) {
+                        resultHTML += '<p><span class="status-real">REAL QLOO DATA</span> ' + realCategories.join(', ') + '</p>';
+                    }
+                    if (mockCategories.length > 0) {
+                        resultHTML += '<p><span class="status-mock">MOCK DATA</span> ' + mockCategories.join(', ') + '</p>';
+                    }
+                }
+
+                // Show recommendations
+                if (recommendations.recommendations) {
+                    Object.entries(recommendations.recommendations).forEach(([category, items]) => {
+                        resultHTML += `<h4>${category.charAt(0).toUpperCase() + category.slice(1)} (${items.length} items)</h4>`;
+                        
+                        items.slice(0, 2).forEach(item => {
+                            resultHTML += `<div class="recommendation">`;
+                            resultHTML += `<strong>${item.name}</strong> (${item.match}% match)<br>`;
+                            resultHTML += `<em>${item.description}</em><br>`;
+                            resultHTML += `<small>Source: ${item.source || 'unknown'} | Category: ${item.category}</small>`;
+                            resultHTML += `</div>`;
+                        });
+                    });
+                }
+
+                resultHTML += '<h4>Parsed Data Structure:</h4>';
+                resultHTML += '<pre>' + JSON.stringify(parsedData, null, 2) + '</pre>';
+
+                resultHTML += '<h4>Recommendations Response:</h4>';
+                resultHTML += '<pre>' + JSON.stringify(recommendations, null, 2) + '</pre>';
+
+                resultDiv.className = 'success';
+                resultDiv.innerHTML = resultHTML;
+
+                // Update analysis
+                updateAnalysis(recommendations, parsedData);
+
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `<h3>❌ Fixed Integration Failed</h3><p>${error.message}</p>`;
+            }
+        }
+
+        async function testSpecificInput(inputText) {
+            const resultDiv = document.getElementById('specific-result');
+            resultDiv.className = 'loading';
+            resultDiv.innerHTML = `<p>🔄 Testing: "${inputText}"...</p>`;
+
+            try {
+                // Parse the input
+                const parseResponse = await fetch('/.netlify/functions/parse-taste', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ input: inputText })
+                });
+
+                const parsedData = await parseResponse.json();
+
+                // Get recommendations
+                const recsResponse = await fetch('/.netlify/functions/get-recommendations-fixed', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ parsedTaste: parsedData })
+                });
+
+                const recommendations = await recsResponse.json();
+
+                let resultHTML = `<h3>Results for: "${inputText}"</h3>`;
+                
+                // Show what was extracted
+                resultHTML += '<h4>Extracted Tastes:</h4>';
+                resultHTML += '<ul>';
+                Object.entries(parsedData).forEach(([category, data]) => {
+                    if (typeof data === 'object' && data !== null) {
+                        const values = [];
+                        if (data.genres) values.push(...data.genres);
+                        if (data.artists) values.push(...data.artists);
+                        if (data.cuisines) values.push(...data.cuisines);
+                        if (data.dishes) values.push(...data.dishes);
+                        if (data.destinations) values.push(...data.destinations);
+                        if (data.activities) values.push(...data.activities);
+                        if (data.authors) values.push(...data.authors);
+                        
+                        if (values.length > 0) {
+                            resultHTML += `<li><strong>${category}:</strong> ${values.filter(v => v && v.trim()).join(', ')}</li>`;
+                        }
+                    } else if (data) {
+                        resultHTML += `<li><strong>${category}:</strong> ${data}</li>`;
+                    }
+                });
+                resultHTML += '</ul>';
+
+                // Show data source status
+                if (recommendations.metadata && recommendations.metadata.usedMockData) {
+                    const realCategories = Object.entries(recommendations.metadata.usedMockData)
+                        .filter(([cat, isMock]) => !isMock)
+                        .map(([cat]) => cat);
+                    
+                    if (realCategories.length > 0) {
+                        resultHTML += '<p><span class="status-real">REAL QLOO DATA</span> ' + realCategories.join(', ') + '</p>';
+                    }
+                }
+
+                // Show sample recommendations
+                if (recommendations.recommendations) {
+                    Object.entries(recommendations.recommendations).forEach(([category, items]) => {
+                        if (items.length > 0) {
+                            resultHTML += `<h4>${category} (${items.length} items)</h4>`;
+                            const item = items[0];
+                            resultHTML += `<div class="recommendation">`;
+                            resultHTML += `<strong>${item.name}</strong> (${item.match}% match)<br>`;
+                            resultHTML += `<em>${item.description}</em>`;
+                            resultHTML += `</div>`;
+                        }
+                    });
+                }
+
+                resultDiv.className = 'success';
+                resultDiv.innerHTML = resultHTML;
+
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `<h3>❌ Test Failed</h3><p>${error.message}</p>`;
+            }
+        }
+
+        function updateAnalysis(recommendations, parsedData) {
+            const analysisDiv = document.getElementById('analysis-result');
+            
+            let analysisHTML = '<h3>📊 Integration Analysis</h3>';
+            
+            // Analyze parsed data structure
+            analysisHTML += '<h4>Parsed Data Structure:</h4>';
+            analysisHTML += '<ul>';
+            Object.entries(parsedData).forEach(([category, data]) => {
+                if (typeof data === 'object' && data !== null) {
+                    const fields = Object.keys(data);
+                    const hasValues = fields.some(field => 
+                        Array.isArray(data[field]) && data[field].some(v => v && v.trim())
+                    );
+                    analysisHTML += `<li><strong>${category}:</strong> ${fields.join(', ')} ${hasValues ? '✅' : '❌'}</li>`;
+                } else {
+                    analysisHTML += `<li><strong>${category}:</strong> ${typeof data} ${data ? '✅' : '❌'}</li>`;
+                }
+            });
+            analysisHTML += '</ul>';
+
+            // Analyze recommendations
+            if (recommendations.recommendations) {
+                const totalCategories = Object.keys(recommendations.recommendations).length;
+                const totalRecommendations = Object.values(recommendations.recommendations)
+                    .reduce((sum, items) => sum + items.length, 0);
+                
+                analysisHTML += '<h4>Recommendations Summary:</h4>';
+                analysisHTML += '<ul>';
+                analysisHTML += `<li><strong>Categories processed:</strong> ${totalCategories}</li>`;
+                analysisHTML += `<li><strong>Total recommendations:</strong> ${totalRecommendations}</li>`;
+                
+                if (recommendations.metadata) {
+                    const realDataCount = Object.values(recommendations.metadata.usedMockData || {})
+                        .filter(isMock => !isMock).length;
+                    analysisHTML += `<li><strong>Real Qloo data categories:</strong> ${realDataCount}</li>`;
+                }
+                analysisHTML += '</ul>';
+            }
+
+            analysisDiv.innerHTML = analysisHTML;
+        }
+
+        // Auto-run test on page load
+        window.onload = function() {
+            setTimeout(() => {
+                testFixedFlow();
+            }, 1000);
+        };
+    </script>
+</body>
+</html>

@@ -80,18 +80,88 @@ function processQlooSearchResults(qlooData, category, originalQuery) {
     return [];
   }
 
+  console.log(`[Qloo] Processing ${qlooData.results.length} results for ${category}:`, qlooData.results.slice(0, 3));
+
   const results = qlooData.results.slice(0, 6).map((item, index) => {
+    // Extract rich data from Qloo response
+    const properties = item.properties || {};
+    const location = item.location || {};
+    
+    // Use Qloo's actual name, not our search term
+    let name = item.name || item.title || `${category} recommendation`;
+    
+    // Use Qloo's actual description if available
+    let description = item.description || properties.description || properties.short_description || '';
+    
+    // Clean up HTML tags and entities from description
+    if (description) {
+      // Remove HTML tags
+      description = description.replace(/<[^>]*>/g, ' ');
+      // Replace HTML entities
+      description = description.replace(/&amp;/g, '&')
+                              .replace(/&lt;/g, '<')
+                              .replace(/&gt;/g, '>')
+                              .replace(/&quot;/g, '"')
+                              .replace(/&#39;/g, "'")
+                              .replace(/&nbsp;/g, ' ');
+      // Clean up multiple spaces and trim
+      description = description.replace(/\s+/g, ' ').trim();
+      // Limit description length for better UI
+      if (description.length > 200) {
+        description = description.substring(0, 197) + '...';
+      }
+    }
+    
+    // If no description, create one based on available Qloo data
+    if (!description) {
+      if (properties.address && location.city) {
+        description = `Located in ${location.city}${properties.address ? ' at ' + properties.address : ''}`;
+      } else if (properties.genre) {
+        description = `${properties.genre} ${category}`;
+      } else if (item.types && item.types.length > 0) {
+        const mainType = item.types[0].split(':').pop();
+        description = `${mainType.charAt(0).toUpperCase() + mainType.slice(1)} recommendation`;
+      } else {
+        description = `${name} - ${category} recommendation from Qloo`;
+      }
+    }
+    
+    // Calculate match based on Qloo's popularity score if available
+    let match = Math.max(75, 100 - (index * 3)); // Default fallback
+    if (item.popularity && typeof item.popularity === 'number') {
+      match = Math.round(item.popularity * 100);
+      match = Math.max(75, Math.min(99, match)); // Keep between 75-99
+    }
+    
+    // Determine category from Qloo's types if available
+    let itemCategory = category;
+    if (item.types && item.types.length > 0) {
+      const mainType = item.types[0].split(':').pop();
+      itemCategory = mainType.charAt(0).toUpperCase() + mainType.slice(1);
+    }
+    
     return {
-      name: item.name || item.title || `${category} recommendation`,
-      description: item.description || item.summary || `Great ${category} recommendation based on your taste`,
-      category: item.category || category || 'Recommendation',
-      match: Math.max(85, 100 - (index * 2)), // Decreasing match scores
-      image: getStaticImageForCategory(category, item.name || ''),
+      name: name,
+      description: description,
+      category: itemCategory,
+      match: match,
+      image: getStaticImageForCategory(category, name),
       source: 'qloo',
-      id: item.id || `qloo_${Date.now()}_${index}`
+      id: item.entity_id || item.id || `qloo_${Date.now()}_${index}`,
+      
+      // Include additional Qloo data for debugging/future use
+      qlooData: {
+        entity_id: item.entity_id,
+        popularity: item.popularity,
+        types: item.types,
+        location: location,
+        properties: properties,
+        tags: item.tags || []
+      }
     };
   });
 
+  console.log(`[Qloo] Processed results sample:`, results.slice(0, 2));
   return results;
 }
 
@@ -171,13 +241,54 @@ exports.handler = async function(event, context) {
     const usedMockData = {};
 
     // Process each category
-    for (const [category, taste] of Object.entries(parsedTaste)) {
+    for (const [category, tasteData] of Object.entries(parsedTaste)) {
       // Skip non-category fields
-      if (!taste || !['music', 'food', 'book', 'travel', 'fashion', 'brand'].includes(category)) {
+      if (!tasteData || !['music', 'food', 'book', 'books', 'travel', 'fashion', 'brand'].includes(category)) {
         continue;
       }
 
-      console.log(`[Processing] Category: ${category}, Taste: ${taste}`);
+      // Extract actual taste string from complex object structure
+      let taste = '';
+      if (typeof tasteData === 'string') {
+        taste = tasteData;
+      } else if (typeof tasteData === 'object') {
+        // Handle Gemini's complex structure
+        const allValues = [];
+        
+        // Extract from different possible fields, filtering out "Not specified" values
+        if (tasteData.genres && Array.isArray(tasteData.genres)) {
+          allValues.push(...tasteData.genres.filter(g => g && g.trim() && !g.toLowerCase().includes('not specified')));
+        }
+        if (tasteData.artists && Array.isArray(tasteData.artists)) {
+          allValues.push(...tasteData.artists.filter(a => a && a.trim() && !a.toLowerCase().includes('not specified')));
+        }
+        if (tasteData.cuisines && Array.isArray(tasteData.cuisines)) {
+          allValues.push(...tasteData.cuisines.filter(c => c && c.trim() && !c.toLowerCase().includes('not specified')));
+        }
+        if (tasteData.dishes && Array.isArray(tasteData.dishes)) {
+          allValues.push(...tasteData.dishes.filter(d => d && d.trim() && !d.toLowerCase().includes('not specified')));
+        }
+        if (tasteData.destinations && Array.isArray(tasteData.destinations)) {
+          allValues.push(...tasteData.destinations.filter(d => d && d.trim() && !d.toLowerCase().includes('not specified')));
+        }
+        if (tasteData.activities && Array.isArray(tasteData.activities)) {
+          allValues.push(...tasteData.activities.filter(a => a && a.trim() && !a.toLowerCase().includes('not specified')));
+        }
+        if (tasteData.authors && Array.isArray(tasteData.authors)) {
+          allValues.push(...tasteData.authors.filter(a => a && a.trim() && !a.toLowerCase().includes('not specified')));
+        }
+        
+        // Use the first non-empty value or combine multiple values
+        taste = allValues.length > 0 ? allValues[0] : '';
+      }
+
+      // Skip if we couldn't extract a meaningful taste
+      if (!taste || taste.trim() === '') {
+        console.log(`[Skip] No meaningful taste extracted for ${category}`);
+        continue;
+      }
+
+      console.log(`[Processing] Category: ${category}, Extracted Taste: "${taste}"`);
 
       try {
         // Try to get real Qloo data using the working /search endpoint

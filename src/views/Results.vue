@@ -615,16 +615,41 @@ const explorationLevel = computed(() => {
 });
 
 // Set the active category to the first available one
-onMounted(() => {
+onMounted(async () => {
+  console.log('🔍 Results page mounted');
+  console.log('📝 tasteInput.value:', tasteInput.value);
+  console.log('📊 recommendations.value:', recommendations.value);
+  console.log('🔢 recommendations keys:', Object.keys(recommendations.value));
+  console.log('📏 recommendations length:', Object.keys(recommendations.value).length);
+  
   // If there's no taste input, redirect to home
   if (!tasteInput.value) {
+    console.log('❌ No taste input, redirecting to home');
     router.push('/');
     return;
+  }
+  
+  // If there are no recommendations but we have taste input, process it
+  if (Object.keys(recommendations.value).length === 0 && tasteInput.value) {
+    console.log('🔄 No recommendations found, processing input...');
+    try {
+      isLoading.value = true;
+      await tasteStore.processInput(tasteInput.value);
+      console.log('✅ Processing complete, new recommendations:', recommendations.value);
+    } catch (error) {
+      console.error('Error processing taste input on Results page:', error);
+      error.value = 'Failed to load recommendations. Please try again.';
+    } finally {
+      isLoading.value = false;
+    }
   }
   
   // Set the first category as active
   if (Object.keys(recommendations.value).length > 0) {
     activeCategory.value = Object.keys(recommendations.value)[0];
+    console.log('🎯 Set active category to:', activeCategory.value);
+  } else {
+    console.log('❌ No recommendations to set active category');
   }
 });
 

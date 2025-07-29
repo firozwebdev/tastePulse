@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🔍 Debug Frontend API Calls</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .test-section { 
+            margin: 20px 0; 
+            padding: 20px; 
+            border: 2px solid #ddd; 
+            border-radius: 8px; 
+            background: white;
+        }
+        .success { border-color: #28a745; background: #d4edda; }
+        .error { border-color: #dc3545; background: #f8d7da; }
+        .loading { border-color: #17a2b8; background: #d1ecf1; }
+        button { 
+            padding: 12px 24px; 
+            margin: 8px; 
+            cursor: pointer; 
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            background: #007bff;
+            color: white;
+        }
+        pre { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 4px; 
+            overflow-x: auto; 
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        h1 { color: #333; text-align: center; }
+        h2 { color: #007bff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Debug Frontend API Calls</h1>
+        <p style="text-align: center; color: #666;">
+            Testing what the frontend actually receives from the API
+        </p>
+
+        <div class="test-section">
+            <h2>🧪 Test Complete Frontend Flow</h2>
+            <button onclick="testFrontendFlow()">Test Frontend API Flow</button>
+            <div id="frontend-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 Test Direct API Calls</h2>
+            <button onclick="testParseAPI()">Test Parse API</button>
+            <button onclick="testRecommendationsAPI()">Test Recommendations API</button>
+            <div id="direct-result"></div>
+        </div>
+    </div>
+
+    <script>
+        async function testFrontendFlow() {
+            const resultDiv = document.getElementById('frontend-result');
+            resultDiv.className = 'loading';
+            resultDiv.innerHTML = '<p>🔄 Testing complete frontend flow...</p>';
+
+            try {
+                const testInput = "I love lo-fi beats and Japanese ramen";
+                
+                // Step 1: Test parse API
+                console.log('Step 1: Testing parse API...');
+                const parseResponse = await fetch('/.netlify/functions/parse-taste', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ input: testInput })
+                });
+
+                if (!parseResponse.ok) {
+                    throw new Error(`Parse API failed: ${parseResponse.status}`);
+                }
+
+                const parsedData = await parseResponse.json();
+                console.log('Parse API response:', parsedData);
+
+                // Step 2: Test recommendations API
+                console.log('Step 2: Testing recommendations API...');
+                const recsResponse = await fetch('/.netlify/functions/get-recommendations-fixed', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ parsedTaste: parsedData })
+                });
+
+                if (!recsResponse.ok) {
+                    throw new Error(`Recommendations API failed: ${recsResponse.status}`);
+                }
+
+                const recommendations = await recsResponse.json();
+                console.log('Recommendations API response:', recommendations);
+
+                // Analyze the structure
+                let resultHTML = '<h3>🎉 Frontend Flow Results</h3>';
+                
+                resultHTML += '<h4>Step 1: Parse API Response</h4>';
+                resultHTML += '<pre>' + JSON.stringify(parsedData, null, 2) + '</pre>';
+                
+                resultHTML += '<h4>Step 2: Recommendations API Response</h4>';
+                resultHTML += '<pre>' + JSON.stringify(recommendations, null, 2) + '</pre>';
+                
+                // Check structure
+                resultHTML += '<h4>Structure Analysis:</h4>';
+                resultHTML += '<ul>';
+                resultHTML += `<li><strong>Parse response type:</strong> ${typeof parsedData}</li>`;
+                resultHTML += `<li><strong>Parse response keys:</strong> ${Object.keys(parsedData || {}).join(', ')}</li>`;
+                resultHTML += `<li><strong>Recommendations response type:</strong> ${typeof recommendations}</li>`;
+                resultHTML += `<li><strong>Recommendations response keys:</strong> ${Object.keys(recommendations || {}).join(', ')}</li>`;
+                
+                if (recommendations && recommendations.recommendations) {
+                    resultHTML += `<li><strong>Recommendation categories:</strong> ${Object.keys(recommendations.recommendations).join(', ')}</li>`;
+                    
+                    Object.entries(recommendations.recommendations).forEach(([category, items]) => {
+                        resultHTML += `<li><strong>${category} count:</strong> ${Array.isArray(items) ? items.length : 'Not an array'}</li>`;
+                    });
+                } else {
+                    resultHTML += '<li><strong>⚠️ No recommendations.recommendations found!</strong></li>';
+                }
+                resultHTML += '</ul>';
+
+                resultDiv.className = 'success';
+                resultDiv.innerHTML = resultHTML;
+
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `<h3>❌ Frontend Flow Failed</h3><p>${error.message}</p>`;
+                console.error('Frontend flow error:', error);
+            }
+        }
+
+        async function testParseAPI() {
+            const resultDiv = document.getElementById('direct-result');
+            resultDiv.className = 'loading';
+            resultDiv.innerHTML = '<p>🔄 Testing parse API...</p>';
+
+            try {
+                const response = await fetch('/.netlify/functions/parse-taste', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ input: "I love jazz music and Italian food" })
+                });
+
+                const data = await response.json();
+                
+                let resultHTML = '<h3>Parse API Results</h3>';
+                resultHTML += `<p><strong>Status:</strong> ${response.status}</p>`;
+                resultHTML += '<h4>Response:</h4>';
+                resultHTML += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+
+                resultDiv.className = response.ok ? 'success' : 'error';
+                resultDiv.innerHTML = resultHTML;
+
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `<h3>❌ Parse API Failed</h3><p>${error.message}</p>`;
+            }
+        }
+
+        async function testRecommendationsAPI() {
+            const resultDiv = document.getElementById('direct-result');
+            resultDiv.className = 'loading';
+            resultDiv.innerHTML = '<p>🔄 Testing recommendations API...</p>';
+
+            try {
+                const testData = {
+                    music: { genres: ['jazz'], artists: [] },
+                    food: { cuisines: ['Italian'], dishes: [] }
+                };
+
+                const response = await fetch('/.netlify/functions/get-recommendations-fixed', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ parsedTaste: testData })
+                });
+
+                const data = await response.json();
+                
+                let resultHTML = '<h3>Recommendations API Results</h3>';
+                resultHTML += `<p><strong>Status:</strong> ${response.status}</p>`;
+                resultHTML += '<h4>Response:</h4>';
+                resultHTML += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+
+                resultDiv.className = response.ok ? 'success' : 'error';
+                resultDiv.innerHTML = resultHTML;
+
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `<h3>❌ Recommendations API Failed</h3><p>${error.message}</p>`;
+            }
+        }
+
+        // Auto-run test on page load
+        window.onload = function() {
+            setTimeout(() => {
+                testFrontendFlow();
+            }, 1000);
+        };
+    </script>
+</body>
+</html>

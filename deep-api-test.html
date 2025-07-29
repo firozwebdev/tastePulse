@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🔬 Deep TastePulse API Investigation</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .test-section { 
+            margin: 20px 0; 
+            padding: 20px; 
+            border: 2px solid #ddd; 
+            border-radius: 8px; 
+            background: white;
+        }
+        .success { border-color: #28a745; background: #d4edda; }
+        .error { border-color: #dc3545; background: #f8d7da; }
+        .warning { border-color: #ffc107; background: #fff3cd; }
+        .loading { border-color: #17a2b8; background: #d1ecf1; }
+        button { 
+            padding: 12px 24px; 
+            margin: 8px; 
+            cursor: pointer; 
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        .btn-danger { background: #dc3545; color: white; }
+        pre { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 4px; 
+            overflow-x: auto; 
+            border-left: 4px solid #007bff;
+            font-size: 12px;
+        }
+        .api-status { 
+            display: inline-block; 
+            padding: 4px 8px; 
+            border-radius: 4px; 
+            font-size: 12px; 
+            font-weight: bold;
+        }
+        .status-real { background: #28a745; color: white; }
+        .status-mock { background: #dc3545; color: white; }
+        .status-unknown { background: #6c757d; color: white; }
+        .metadata { 
+            background: #e9ecef; 
+            padding: 10px; 
+            border-radius: 4px; 
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        h1 { color: #333; text-align: center; }
+        h2 { color: #007bff; border-bottom: 2px solid #007bff; padding-bottom: 5px; }
+        h3 { color: #28a745; }
+        .test-input { 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+            margin: 10px 0;
+        }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔬 Deep TastePulse API Investigation</h1>
+        <p style="text-align: center; color: #666;">
+            This tool will help us determine if we're getting real Qloo data or mock data
+        </p>
+
+        <div class="test-section">
+            <h2>🧪 Quick API Status Check</h2>
+            <button class="btn-primary" onclick="checkAPIStatus()">Check All API Status</button>
+            <div id="api-status-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 Custom Input Test</h2>
+            <textarea id="custom-input" class="test-input" rows="3" placeholder="Enter your taste preferences here...">I love jazz music, especially Miles Davis and John Coltrane. I also enjoy authentic Italian cuisine and contemporary fiction novels.</textarea>
+            <button class="btn-success" onclick="testCustomInput()">Test Custom Input</button>
+            <div id="custom-result"></div>
+        </div>
+
+        <div class="grid">
+            <div class="test-section">
+                <h2>🎵 Music Test</h2>
+                <button class="btn-warning" onclick="testSpecificCategory('music')">Test Music API</button>
+                <div id="music-result"></div>
+            </div>
+
+            <div class="test-section">
+                <h2>🍽️ Food Test</h2>
+                <button class="btn-warning" onclick="testSpecificCategory('food')">Test Food API</button>
+                <div id="food-result"></div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="test-section">
+                <h2>📚 Books Test</h2>
+                <button class="btn-warning" onclick="testSpecificCategory('books')">Test Books API</button>
+                <div id="books-result"></div>
+            </div>
+
+            <div class="test-section">
+                <h2>✈️ Travel Test</h2>
+                <button class="btn-warning" onclick="testSpecificCategory('travel')">Test Travel API</button>
+                <div id="travel-result"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 Raw API Response Analysis</h2>
+            <button class="btn-danger" onclick="analyzeRawResponses()">Analyze Raw API Responses</button>
+            <div id="raw-analysis-result"></div>
+        </div>
+    </div>
+
+    <script>
+        const testInputs = {
+            music: "I'm obsessed with jazz music, especially Miles Davis, John Coltrane, and Thelonious Monk. I love the improvisational nature and complex harmonies.",
+            food: "I'm passionate about authentic Italian cuisine, especially handmade pasta, traditional Neapolitan pizza, and regional wines from Tuscany.",
+            books: "I love contemporary fiction, particularly authors like Elena Ferrante, Kazuo Ishiguro, and Chimamanda Ngozi Adichie.",
+            travel: "I'm fascinated by Japanese culture and want to explore authentic experiences in Kyoto, Tokyo, and traditional ryokans."
+        };
+
+        async function checkAPIStatus() {
+            const resultDiv = document.getElementById('api-status-result');
+            resultDiv.className = 'loading';
+            resultDiv.innerHTML = '<p>🔄 Checking API status...</p>';
+
+            try {
+                // Test environment variables first
+                const envTest = await fetch('/.netlify/functions/parse-taste', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ input: "test environment check" })
+                });
+
+                let statusHTML = '<h3>API Status Summary:</h3>';
+                
+                if (envTest.ok) {
+                    const envData = await envTest.json();
+                    statusHTML += '<div class="metadata">';
+                    statusHTML += '<strong>Environment Check:</strong> ✅ Netlify functions are accessible<br>';
+                    statusHTML += '<strong>Response Type:</strong> ' + (typeof envData) + '<br>';
+                    statusHTML += '<strong>Has Categories:</strong> ' + (envData && Object.keys(envData).length > 0 ? '✅' : '❌') + '<br>';
+                    statusHTML += '</div>';
+                } else {
+                    statusHTML += '<div class="metadata">❌ Netlify functions not accessible</div>';
+                }
+
+                // Test with a simple input
+                const testResponse = await fetch('/.netlify/functions/get-recommendations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        parsedTaste: { music: "jazz", food: "Italian cuisine" }
+                    })
+                });
+
+                if (testResponse.ok) {
+                    const testData = await testResponse.json();
+                    
+                    statusHTML += '<h4>🎯 Recommendation API Status:</h4>';
+                    statusHTML += '<div class="metadata">';
+                    
+                    if (testData.metadata && testData.metadata.usedMockData) {
+                        const mockCategories = Object.entries(testData.metadata.usedMockData)
+                            .filter(([cat, isMock]) => isMock)
+                            .map(([cat]) => cat);
+                        
+                        if (mockCategories.length > 0) {
+                            statusHTML += '<span class="api-status status-mock">USING MOCK DATA</span><br>';
+                            statusHTML += '<strong>Mock Categories:</strong> ' + mockCategories.join(', ') + '<br>';
+                        } else {
+                            statusHTML += '<span class="api-status status-real">USING REAL QLOO DATA</span><br>';
+                        }
+                    } else {
+                        statusHTML += '<span class="api-status status-unknown">STATUS UNKNOWN</span><br>';
+                    }
+                    
+                    statusHTML += '<strong>Categories Returned:</strong> ' + Object.keys(testData.recommendations || {}).join(', ') + '<br>';
+                    statusHTML += '</div>';
+                }
+
+                resultDiv.className = 'success';
+                resultDiv.innerHTML = statusHTML;
+
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `<h3>❌ API Status Check Failed</h3><p>${error.message}</p>`;
+            }
+        }
+
+        async function testCustomInput() {
+            const input = document.getElementById('custom-input').value;
+            const resultDiv = document.getElementById('custom-result');
+            
+            if (!input.trim()) {
+                resultDiv.className = 'warning';
+                resultDiv.innerHTML = '<p>⚠️ Please enter some taste preferences</p>';
+                return;
+            }
+
+            resultDiv.className = 'loading';
+            resultDiv.innerHTML = '<p>🔄 Testing custom input...</p>';
+
+            try {
+                // Step 1: Parse with Gemini
+                const parseResponse = await fetch('/.netlify/functions/parse-taste', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ input })
+                });
+
+                if (!parseResponse.ok) {
+                    throw new Error(`Parse API error: ${parseResponse.status}`);
+                }
+
+                const parsedData = await parseResponse.json();
+
+                // Step 2: Get recommendations
+                const recsResponse = await fetch('/.netlify/functions/get-recommendations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ parsedTaste: parsedData })
+                });
+
+                if (!recsResponse.ok) {
+                    throw new Error(`Recommendations API error: ${recsResponse.status}`);
+                }
+
+                const recommendations = await recsResponse.json();
+
+                // Analyze the results
+                let analysisHTML = '<h3>🎉 Custom Input Test Results</h3>';
+                
+                // Check if using real or mock data
+                if (recommendations.metadata && recommendations.metadata.usedMockData) {
+                    const realCategories = Object.entries(recommendations.metadata.usedMockData)
+                        .filter(([cat, isMock]) => !isMock)
+                        .map(([cat]) => cat);
+                    const mockCategories = Object.entries(recommendations.metadata.usedMockData)
+                        .filter(([cat, isMock]) => isMock)
+                        .map(([cat]) => cat);
+
+                    analysisHTML += '<div class="metadata">';
+                    if (realCategories.length > 0) {
+                        analysisHTML += '<span class="api-status status-real">REAL DATA</span> ' + realCategories.join(', ') + '<br>';
+                    }
+                    if (mockCategories.length > 0) {
+                        analysisHTML += '<span class="api-status status-mock">MOCK DATA</span> ' + mockCategories.join(', ') + '<br>';
+                    }
+                    analysisHTML += '</div>';
+                }
+
+                analysisHTML += '<h4>Parsed Taste (Gemini):</h4>';
+                analysisHTML += '<pre>' + JSON.stringify(parsedData, null, 2) + '</pre>';
+                
+                analysisHTML += '<h4>Recommendations (Qloo):</h4>';
+                analysisHTML += '<pre>' + JSON.stringify(recommendations, null, 2) + '</pre>';
+
+                resultDiv.className = 'success';
+                resultDiv.innerHTML = analysisHTML;
+
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `<h3>❌ Custom Input Test Failed</h3><p>${error.message}</p>`;
+            }
+        }
+
+        async function testSpecificCategory(category) {
+            const resultDiv = document.getElementById(category + '-result');
+            const input = testInputs[category];
+
+            resultDiv.className = 'loading';
+            resultDiv.innerHTML = '<p>🔄 Testing ' + category + ' category...</p>';
+
+            try {
+                // Parse the input
+                const parseResponse = await fetch('/.netlify/functions/parse-taste', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ input })
+                });
+
+                const parsedData = await parseResponse.json();
+
+                // Get recommendations
+                const recsResponse = await fetch('/.netlify/functions/get-recommendations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ parsedTaste: parsedData })
+                });
+
+                const recommendations = await recsResponse.json();
+
+                // Analyze category-specific results
+                let categoryHTML = '<h4>' + category.charAt(0).toUpperCase() + category.slice(1) + ' Results:</h4>';
+                
+                if (recommendations.metadata && recommendations.metadata.usedMockData) {
+                    const isMock = recommendations.metadata.usedMockData[category];
+                    if (isMock === false) {
+                        categoryHTML += '<span class="api-status status-real">REAL QLOO DATA</span><br>';
+                    } else if (isMock === true) {
+                        categoryHTML += '<span class="api-status status-mock">MOCK DATA</span><br>';
+                    }
+                }
+
+                if (recommendations.recommendations && recommendations.recommendations[category]) {
+                    const items = recommendations.recommendations[category];
+                    categoryHTML += '<strong>Found ' + items.length + ' recommendations:</strong><br>';
+                    
+                    items.slice(0, 3).forEach((item, index) => {
+                        categoryHTML += `<div style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 4px;">`;
+                        categoryHTML += `<strong>${item.name}</strong> (${item.match}% match)<br>`;
+                        categoryHTML += `<em>${item.description}</em><br>`;
+                        categoryHTML += `<small>Category: ${item.category}</small>`;
+                        categoryHTML += `</div>`;
+                    });
+                }
+
+                resultDiv.className = 'success';
+                resultDiv.innerHTML = categoryHTML;
+
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `<h4>❌ ${category} test failed</h4><p>${error.message}</p>`;
+            }
+        }
+
+        async function analyzeRawResponses() {
+            const resultDiv = document.getElementById('raw-analysis-result');
+            resultDiv.className = 'loading';
+            resultDiv.innerHTML = '<p>🔄 Analyzing raw API responses...</p>';
+
+            try {
+                const testInput = "I love jazz music and Italian food";
+                
+                // Get raw responses
+                const parseResponse = await fetch('/.netlify/functions/parse-taste', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ input: testInput })
+                });
+
+                const parsedData = await parseResponse.json();
+
+                const recsResponse = await fetch('/.netlify/functions/get-recommendations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ parsedTaste: parsedData })
+                });
+
+                const recommendations = await recsResponse.json();
+
+                // Deep analysis
+                let analysisHTML = '<h3>🔬 Deep Analysis Results</h3>';
+                
+                // Check response structure
+                analysisHTML += '<h4>Response Structure Analysis:</h4>';
+                analysisHTML += '<div class="metadata">';
+                analysisHTML += '<strong>Parse Response Keys:</strong> ' + Object.keys(parsedData).join(', ') + '<br>';
+                analysisHTML += '<strong>Recommendations Keys:</strong> ' + Object.keys(recommendations).join(', ') + '<br>';
+                
+                if (recommendations.metadata) {
+                    analysisHTML += '<strong>Has Metadata:</strong> ✅<br>';
+                    analysisHTML += '<strong>Metadata Keys:</strong> ' + Object.keys(recommendations.metadata).join(', ') + '<br>';
+                } else {
+                    analysisHTML += '<strong>Has Metadata:</strong> ❌<br>';
+                }
+                analysisHTML += '</div>';
+
+                // Check for real vs mock indicators
+                analysisHTML += '<h4>Real vs Mock Data Indicators:</h4>';
+                analysisHTML += '<div class="metadata">';
+                
+                if (recommendations.recommendations) {
+                    Object.entries(recommendations.recommendations).forEach(([category, items]) => {
+                        if (items && items.length > 0) {
+                            const firstItem = items[0];
+                            const hasSpecificDetails = firstItem.name && !firstItem.name.includes('Mock') && !firstItem.name.includes('Sample');
+                            const hasRealDescription = firstItem.description && firstItem.description.length > 50;
+                            const hasImage = firstItem.image && firstItem.image.includes('unsplash');
+                            
+                            analysisHTML += `<strong>${category}:</strong> `;
+                            if (hasSpecificDetails && hasRealDescription) {
+                                analysisHTML += '<span class="api-status status-real">LIKELY REAL</span>';
+                            } else {
+                                analysisHTML += '<span class="api-status status-mock">LIKELY MOCK</span>';
+                            }
+                            analysisHTML += ` (${items.length} items)<br>`;
+                        }
+                    });
+                }
+                analysisHTML += '</div>';
+
+                // Show raw data
+                analysisHTML += '<h4>Raw Parse Response:</h4>';
+                analysisHTML += '<pre>' + JSON.stringify(parsedData, null, 2) + '</pre>';
+                
+                analysisHTML += '<h4>Raw Recommendations Response:</h4>';
+                analysisHTML += '<pre>' + JSON.stringify(recommendations, null, 2) + '</pre>';
+
+                resultDiv.className = 'success';
+                resultDiv.innerHTML = analysisHTML;
+
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `<h3>❌ Raw Analysis Failed</h3><p>${error.message}</p>`;
+            }
+        }
+
+        // Auto-run status check on page load
+        window.onload = function() {
+            checkAPIStatus();
+        };
+    </script>
+</body>
+</html>

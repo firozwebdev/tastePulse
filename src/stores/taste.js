@@ -33,10 +33,11 @@ export const useTasteStore = defineStore('taste', () => {
       processingError.value = null;
       
       console.log('Parsing input with GPT:', input);
+      console.log('ENABLE_MOCK_API is:', ENABLE_MOCK_API);
       
       let result;
       
-      if (ENABLE_MOCK_API) {
+      if (false) { // Temporarily force real API
         // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 1500));
         
@@ -404,8 +405,9 @@ export const useTasteStore = defineStore('taste', () => {
   // Get recommendations from Qloo API or mock data
   async function getQlooRecommendations(parsedTaste) {
     console.log('Getting recommendations from Qloo:', parsedTaste);
+    console.log('ENABLE_MOCK_API in getQlooRecommendations:', ENABLE_MOCK_API);
     
-    if (ENABLE_MOCK_API) {
+    if (false) { // Temporarily force real API
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 2000));
       
@@ -432,7 +434,19 @@ export const useTasteStore = defineStore('taste', () => {
     } else {
       // Call the real Qloo API via Netlify function
       const response = await api.getRecommendations(parsedTaste);
-      return response.data;
+      console.log('🔍 Store: Raw API response:', response);
+      console.log('🔍 Store: response.data:', response.data);
+      console.log('🔍 Store: response.data.recommendations:', response.data?.recommendations);
+      
+      // The API returns { recommendations: {...}, metadata: {...} }
+      // But we need just the recommendations object
+      if (response.data && response.data.recommendations) {
+        console.log('✅ Store: Returning recommendations object:', response.data.recommendations);
+        return response.data.recommendations;
+      } else {
+        console.log('⚠️ Store: No recommendations found in response, returning response.data');
+        return response.data;
+      }
     }
   }
   
@@ -979,7 +993,20 @@ export const useTasteStore = defineStore('taste', () => {
       parsedTaste.value = parsedResult;
       
       const recommendationsResult = await getQlooRecommendations(parsedResult);
-      recommendations.value = recommendationsResult;
+      console.log('🎯 Store: Setting recommendations.value to:', recommendationsResult);
+      
+      // Ensure we have the correct data structure
+      if (recommendationsResult && typeof recommendationsResult === 'object') {
+        recommendations.value = recommendationsResult;
+      } else {
+        console.warn('⚠️ Store: Invalid recommendations result, using empty object');
+        recommendations.value = {};
+      }
+      
+      console.log('✅ Store: recommendations.value is now:', recommendations.value);
+      console.log('🔢 Store: recommendations keys:', Object.keys(recommendations.value));
+      console.log('🎵 Store: music recommendations count:', recommendations.value.music?.length || 0);
+      console.log('🍽️ Store: food recommendations count:', recommendations.value.food?.length || 0);
       
       processingStage.value = 'complete';
       
