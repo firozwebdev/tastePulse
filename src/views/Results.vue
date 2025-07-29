@@ -468,6 +468,11 @@
           </div>
         </transition>
       </div>
+      
+      <!-- Time Travel Mode Section -->
+      <div v-if="Object.keys(recommendations).length > 0" class="mt-12">
+        <TimeTravelMode :recommendations="recommendations" />
+      </div>
     </div>
 
     <!-- Recommendation Details Modal -->
@@ -487,6 +492,8 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useTasteStore } from '../stores/taste';
 import TasteDnaChart from '../components/TasteDnaChart.vue';
+import TasteDNAVisualization from '../components/TasteDNAVisualization.vue';
+import TimeTravelMode from '../components/TimeTravelMode.vue';
 import BaseButton from '../components/BaseButton.vue';
 import LoadingSpinner from '../components/LoadingSpinner.vue';
 import ErrorState from '../components/ErrorState.vue';

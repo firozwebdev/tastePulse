@@ -1,46 +1,190 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>🔍 Test Store Direct</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        button { padding: 10px 20px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        pre { background: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto; }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store Direct Test - TastePulse</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>🔍 Test Store Direct</h1>
-    <button onclick="testStoreData()">Test Store Data</button>
-    <button onclick="goToResults()">Go to Results</button>
-    <div id="result"></div>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">🧪 Store Direct Test</h1>
+            <p class="text-gray-600 text-lg">Testing enhanced features through the store</p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-2xl font-semibold mb-4">🎮 Test Controls</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button onclick="testTasteBridging()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    🌉 Test Taste Bridging
+                </button>
+                <button onclick="testTimeTravel()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    ⏰ Test Time Travel
+                </button>
+                <button onclick="testAnalytics()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    📊 Test Analytics
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-xl font-semibold mb-4">📊 Results</h3>
+            <div id="results" class="space-y-4">
+                <p class="text-gray-500">Click a test button to see results</p>
+            </div>
+        </div>
+
+        <div class="mt-8 bg-gray-900 text-green-400 rounded-lg p-4">
+            <h3 class="text-lg font-semibold mb-2">🐛 Debug Console</h3>
+            <div id="debug-console" class="font-mono text-sm max-h-64 overflow-y-auto">
+                <p>Ready for testing...</p>
+            </div>
+        </div>
+    </div>
 
     <script>
-        function testStoreData() {
-            // Simulate what should be in the store
-            const mockData = {
-                tasteInput: "I love lo-fi beats and Japanese ramen",
-                recommendations: {
-                    music: [
-                        { name: "Lo-fi Hip Hop", description: "Chill beats", match: 95, category: "music", image: "test.jpg" }
-                    ],
-                    food: [
-                        { name: "Ramen Shop", description: "Authentic Japanese ramen", match: 92, category: "food", image: "test.jpg" }
-                    ]
+        const sampleRecommendations = {
+            music: [
+                {
+                    id: 1,
+                    name: "Bohemian Rhapsody by Queen",
+                    description: "Epic rock opera that blends multiple musical styles",
+                    match: 95,
+                    category: "music",
+                    image: "https://via.placeholder.com/300x200?text=Music"
                 }
-            };
+            ],
+            food: [
+                {
+                    id: 3,
+                    name: "Authentic Ramen from Tokyo",
+                    description: "Rich tonkotsu broth with handmade noodles",
+                    match: 92,
+                    category: "food",
+                    image: "https://via.placeholder.com/300x200?text=Ramen"
+                }
+            ]
+        };
 
-            // Store in localStorage to simulate store data
-            localStorage.setItem('tastepulse_test_data', JSON.stringify(mockData));
-            
-            document.getElementById('result').innerHTML = `
-                <h3>Mock data stored:</h3>
-                <pre>${JSON.stringify(mockData, null, 2)}</pre>
+        function log(message) {
+            const console = document.getElementById('debug-console');
+            const timestamp = new Date().toLocaleTimeString();
+            console.innerHTML += `<p>[${timestamp}] ${message}</p>`;
+            console.scrollTop = console.scrollHeight;
+        }
+
+        function displayResults(data, title) {
+            const container = document.getElementById('results');
+            container.innerHTML = `
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <h4 class="font-semibold text-green-800 mb-2">${title}</h4>
+                    <pre class="text-sm text-green-700 overflow-x-auto whitespace-pre-wrap">${JSON.stringify(data, null, 2)}</pre>
+                </div>
             `;
         }
 
-        function goToResults() {
-            window.location.href = '/results';
+        function displayError(error, title) {
+            const container = document.getElementById('results');
+            container.innerHTML = `
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <h4 class="font-semibold text-red-800 mb-2">${title}</h4>
+                    <p class="text-red-700">${error}</p>
+                </div>
+            `;
         }
+
+        async function testTasteBridging() {
+            log('🌉 Testing Taste Bridging via store...');
+            
+            try {
+                const response = await fetch('/.netlify/functions/taste-bridge', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        recommendations: sampleRecommendations,
+                        originalTaste: "I love Japanese culture and rock music"
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                log('✅ Taste Bridging successful via store');
+                displayResults(data, 'Taste Bridging Response');
+
+            } catch (error) {
+                log(`❌ Taste Bridging failed: ${error.message}`);
+                displayError(error.message, 'Taste Bridging Error');
+            }
+        }
+
+        async function testTimeTravel() {
+            log('⏰ Testing Time Travel via store...');
+            
+            try {
+                const response = await fetch('/.netlify/functions/time-travel-taste', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        recommendations: sampleRecommendations,
+                        selectedEras: ['1980s', '1990s']
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                log('✅ Time Travel successful via store');
+                displayResults(data, 'Time Travel Response');
+
+            } catch (error) {
+                log(`❌ Time Travel failed: ${error.message}`);
+                displayError(error.message, 'Time Travel Error');
+            }
+        }
+
+        async function testAnalytics() {
+            log('📊 Testing Analytics via store...');
+            
+            try {
+                const response = await fetch('/.netlify/functions/taste-analytics', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        recommendations: sampleRecommendations,
+                        location: 'San Francisco, CA'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                log('✅ Analytics successful via store');
+                displayResults(data, 'Analytics Response');
+
+            } catch (error) {
+                log(`❌ Analytics failed: ${error.message}`);
+                displayError(error.message, 'Analytics Error');
+            }
+        }
+
+        window.addEventListener('load', () => {
+            log('🚀 Store Direct Test Page Loaded');
+            log('📡 Ready to test enhanced features through the store');
+        });
     </script>
 </body>
 </html>

@@ -297,3 +297,22 @@ CREATE POLICY "Anyone can view feature requests" ON feature_requests
 -- Users can insert their own feature requests
 CREATE POLICY "Users can insert own feature requests" ON feature_requests
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Create anonymous taste profiles table for privacy-first analytics
+CREATE TABLE IF NOT EXISTS anonymous_taste_profiles (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  taste_signature JSONB NOT NULL,
+  location_region TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create index for faster similarity queries
+CREATE INDEX IF NOT EXISTS idx_anonymous_taste_profiles_created_at ON anonymous_taste_profiles(created_at);
+CREATE INDEX IF NOT EXISTS idx_anonymous_taste_profiles_location ON anonymous_taste_profiles(location_region);
+
+-- Enable RLS (Row Level Security) - though not strictly needed for anonymous data
+ALTER TABLE anonymous_taste_profiles ENABLE ROW LEVEL SECURITY;
+
+-- Create policy to allow anonymous inserts and reads
+CREATE POLICY "Allow anonymous taste profile operations" ON anonymous_taste_profiles
+  FOR ALL USING (true) WITH CHECK (true);

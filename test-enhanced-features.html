@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Features Test - TastePulse</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .feature-card {
+            transition: all 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">🚀 Enhanced Features Test</h1>
+            <p class="text-gray-600 text-lg">Testing all the new TastePulse features</p>
+        </div>
+
+        <!-- Test Controls -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-2xl font-semibold mb-4">🎮 Test Controls</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <button onclick="testTasteBridging()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    🌉 Test Taste Bridging
+                </button>
+                <button onclick="testTimeTravel()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    ⏰ Test Time Travel
+                </button>
+                <button onclick="testTasteAnalytics()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    📊 Test Analytics
+                </button>
+                <button onclick="testAllFeatures()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    🎯 Test All Features
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Display -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Taste Bridging Results -->
+            <div class="feature-card bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-xl font-semibold mb-4 flex items-center">
+                    🌉 Taste Bridging Results
+                    <div id="bridging-loading" class="loading-spinner ml-4 hidden"></div>
+                </h3>
+                <div id="bridging-results" class="space-y-4">
+                    <p class="text-gray-500">Click "Test Taste Bridging" to see results</p>
+                </div>
+            </div>
+
+            <!-- Time Travel Results -->
+            <div class="feature-card bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-xl font-semibold mb-4 flex items-center">
+                    ⏰ Time Travel Results
+                    <div id="timetravel-loading" class="loading-spinner ml-4 hidden"></div>
+                </h3>
+                <div id="timetravel-results" class="space-y-4">
+                    <p class="text-gray-500">Click "Test Time Travel" to see results</p>
+                </div>
+            </div>
+
+            <!-- Analytics Results -->
+            <div class="feature-card bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-xl font-semibold mb-4 flex items-center">
+                    📊 Analytics Results
+                    <div id="analytics-loading" class="loading-spinner ml-4 hidden"></div>
+                </h3>
+                <div id="analytics-results" class="space-y-4">
+                    <p class="text-gray-500">Click "Test Analytics" to see results</p>
+                </div>
+            </div>
+
+            <!-- Integration Test Results -->
+            <div class="feature-card bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-xl font-semibold mb-4 flex items-center">
+                    🎯 Integration Test
+                    <div id="integration-loading" class="loading-spinner ml-4 hidden"></div>
+                </h3>
+                <div id="integration-results" class="space-y-4">
+                    <p class="text-gray-500">Click "Test All Features" to see results</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Debug Console -->
+        <div class="mt-8 bg-gray-900 text-green-400 rounded-lg p-4">
+            <h3 class="text-lg font-semibold mb-2">🐛 Debug Console</h3>
+            <div id="debug-console" class="font-mono text-sm max-h-64 overflow-y-auto">
+                <p>Ready for testing...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample recommendations data for testing
+        const sampleRecommendations = {
+            music: [
+                {
+                    id: 1,
+                    name: "Bohemian Rhapsody by Queen",
+                    description: "Epic rock opera that blends multiple musical styles",
+                    match: 95,
+                    category: "music",
+                    image: "https://via.placeholder.com/300x200?text=Music"
+                },
+                {
+                    id: 2,
+                    name: "Kind of Blue by Miles Davis",
+                    description: "Legendary jazz album that defined cool jazz",
+                    match: 88,
+                    category: "music",
+                    image: "https://via.placeholder.com/300x200?text=Jazz"
+                }
+            ],
+            food: [
+                {
+                    id: 3,
+                    name: "Authentic Ramen from Tokyo",
+                    description: "Rich tonkotsu broth with handmade noodles",
+                    match: 92,
+                    category: "food",
+                    image: "https://via.placeholder.com/300x200?text=Ramen"
+                }
+            ],
+            travel: [
+                {
+                    id: 4,
+                    name: "Kyoto Temple Gardens",
+                    description: "Serene Buddhist temples with traditional architecture",
+                    match: 90,
+                    category: "travel",
+                    image: "https://via.placeholder.com/300x200?text=Temple"
+                }
+            ],
+            books: [
+                {
+                    id: 5,
+                    name: "Murakami's Norwegian Wood",
+                    description: "Melancholic coming-of-age story set in 1960s Tokyo",
+                    match: 87,
+                    category: "books",
+                    image: "https://via.placeholder.com/300x200?text=Book"
+                }
+            ]
+        };
+
+        function log(message) {
+            const console = document.getElementById('debug-console');
+            const timestamp = new Date().toLocaleTimeString();
+            console.innerHTML += `<p>[${timestamp}] ${message}</p>`;
+            console.scrollTop = console.scrollHeight;
+        }
+
+        function showLoading(elementId) {
+            document.getElementById(elementId).classList.remove('hidden');
+        }
+
+        function hideLoading(elementId) {
+            document.getElementById(elementId).classList.add('hidden');
+        }
+
+        function displayResults(containerId, data, title) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <h4 class="font-semibold text-green-800 mb-2">${title}</h4>
+                    <pre class="text-sm text-green-700 overflow-x-auto">${JSON.stringify(data, null, 2)}</pre>
+                </div>
+            `;
+        }
+
+        function displayError(containerId, error, title) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <h4 class="font-semibold text-red-800 mb-2">${title}</h4>
+                    <p class="text-red-700">${error}</p>
+                </div>
+            `;
+        }
+
+        async function testTasteBridging() {
+            log('🌉 Testing Taste Bridging...');
+            showLoading('bridging-loading');
+
+            try {
+                const response = await fetch('/.netlify/functions/taste-bridge', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        recommendations: sampleRecommendations,
+                        originalTaste: "I love Japanese culture, jazz music, and philosophical literature"
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                log('✅ Taste Bridging successful');
+                displayResults('bridging-results', data, 'Taste Bridging Response');
+
+            } catch (error) {
+                log(`❌ Taste Bridging failed: ${error.message}`);
+                displayError('bridging-results', error.message, 'Taste Bridging Error');
+            } finally {
+                hideLoading('bridging-loading');
+            }
+        }
+
+        async function testTimeTravel() {
+            log('⏰ Testing Time Travel...');
+            showLoading('timetravel-loading');
+
+            try {
+                const response = await fetch('/.netlify/functions/time-travel-taste', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        recommendations: sampleRecommendations,
+                        selectedEras: ['1920s', '1960s', '1980s']
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                log('✅ Time Travel successful');
+                displayResults('timetravel-results', data, 'Time Travel Response');
+
+            } catch (error) {
+                log(`❌ Time Travel failed: ${error.message}`);
+                displayError('timetravel-results', error.message, 'Time Travel Error');
+            } finally {
+                hideLoading('timetravel-loading');
+            }
+        }
+
+        async function testTasteAnalytics() {
+            log('📊 Testing Taste Analytics...');
+            showLoading('analytics-loading');
+
+            try {
+                const response = await fetch('/.netlify/functions/taste-analytics', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        recommendations: sampleRecommendations,
+                        location: 'San Francisco, CA'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                log('✅ Taste Analytics successful');
+                displayResults('analytics-results', data, 'Taste Analytics Response');
+
+            } catch (error) {
+                log(`❌ Taste Analytics failed: ${error.message}`);
+                displayError('analytics-results', error.message, 'Taste Analytics Error');
+            } finally {
+                hideLoading('analytics-loading');
+            }
+        }
+
+        async function testAllFeatures() {
+            log('🎯 Testing All Features Integration...');
+            showLoading('integration-loading');
+
+            const results = {
+                tasteBridging: null,
+                timeTravel: null,
+                analytics: null,
+                errors: []
+            };
+
+            try {
+                // Test Taste Bridging
+                try {
+                    const bridgingResponse = await fetch('/.netlify/functions/taste-bridge', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            recommendations: sampleRecommendations,
+                            originalTaste: "I love Japanese culture, jazz music, and philosophical literature"
+                        })
+                    });
+                    results.tasteBridging = await bridgingResponse.json();
+                    log('✅ Taste Bridging integration test passed');
+                } catch (error) {
+                    results.errors.push(`Taste Bridging: ${error.message}`);
+                    log(`❌ Taste Bridging integration test failed: ${error.message}`);
+                }
+
+                // Test Time Travel
+                try {
+                    const timeTravelResponse = await fetch('/.netlify/functions/time-travel-taste', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            recommendations: sampleRecommendations,
+                            selectedEras: ['1920s', '1960s', '1980s']
+                        })
+                    });
+                    results.timeTravel = await timeTravelResponse.json();
+                    log('✅ Time Travel integration test passed');
+                } catch (error) {
+                    results.errors.push(`Time Travel: ${error.message}`);
+                    log(`❌ Time Travel integration test failed: ${error.message}`);
+                }
+
+                // Test Analytics
+                try {
+                    const analyticsResponse = await fetch('/.netlify/functions/taste-analytics', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            recommendations: sampleRecommendations,
+                            location: 'San Francisco, CA'
+                        })
+                    });
+                    results.analytics = await analyticsResponse.json();
+                    log('✅ Analytics integration test passed');
+                } catch (error) {
+                    results.errors.push(`Analytics: ${error.message}`);
+                    log(`❌ Analytics integration test failed: ${error.message}`);
+                }
+
+                // Display integration results
+                if (results.errors.length === 0) {
+                    log('🎉 All integration tests passed!');
+                    displayResults('integration-results', results, 'Integration Test Results - All Passed');
+                } else {
+                    log(`⚠️ Integration tests completed with ${results.errors.length} errors`);
+                    displayResults('integration-results', results, `Integration Test Results - ${results.errors.length} Errors`);
+                }
+
+            } catch (error) {
+                log(`❌ Integration test failed: ${error.message}`);
+                displayError('integration-results', error.message, 'Integration Test Error');
+            } finally {
+                hideLoading('integration-loading');
+            }
+        }
+
+        // Auto-run a basic connectivity test on page load
+        window.addEventListener('load', () => {
+            log('🚀 Enhanced Features Test Page Loaded');
+            log('📡 Ready to test all new TastePulse features');
+            log('💡 Use the buttons above to test individual features or run the full integration test');
+        });
+    </script>
+</body>
+</html>
