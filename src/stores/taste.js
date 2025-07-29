@@ -1074,24 +1074,51 @@ export const useTasteStore = defineStore('taste', () => {
   }
 
   // Save individual recommendation
-  async function saveRecommendation(recommendation, category) {
+  async function saveRecommendation(recommendation, category, profileId = null) {
     try {
       if (!isAuthenticated.value) {
         throw new Error('You must be logged in to save a recommendation');
       }
 
-      const savedRec = {
-        id: `rec-${Date.now()}`,
-        date: new Date().toISOString(),
-        category,
-        ...recommendation
+      const recommendationData = {
+        user_id: user.value.id,
+        profile_id: profileId,
+        recommendation_data: recommendation,
+        category: category,
+        created_at: new Date().toISOString()
       };
 
-      // In a real app, this would save to Supabase or another backend
-      // For now, we'll just add it to the local state
-      savedRecommendations.value.push(savedRec);
+      // Try to save to Supabase first
+      try {
+        const { data, error } = await supabase
+          .from('saved_recommendations')
+          .insert([recommendationData])
+          .select();
 
-      return savedRec;
+        if (error) throw error;
+
+        // Add to local state
+        savedRecommendations.value.push(data[0]);
+        console.log('Recommendation saved to Supabase:', data[0]);
+        return data[0];
+      } catch (supabaseError) {
+        console.warn('Supabase save failed, using localStorage:', supabaseError);
+        
+        // Fallback to localStorage
+        const localRecommendation = {
+          ...recommendationData,
+          id: `rec-${Date.now()}`
+        };
+        
+        const existingRecommendations = JSON.parse(localStorage.getItem('savedRecommendations') || '[]');
+        existingRecommendations.push(localRecommendation);
+        localStorage.setItem('savedRecommendations', JSON.stringify(existingRecommendations));
+        
+        savedRecommendations.value.push(localRecommendation);
+        console.log('Recommendation saved to localStorage:', localRecommendation);
+        return localRecommendation;
+      }
+
     } catch (error) {
       console.error('Error saving recommendation:', error);
       throw error;
@@ -1101,19 +1128,68 @@ export const useTasteStore = defineStore('taste', () => {
   // Load saved profiles from user account
   // Load saved recommendations from user account
   async function loadSavedRecommendations() {
+    console.log('🔄 loadSavedRecommendations: Starting...');
     try {
       if (!isAuthenticated.value) {
+        console.log('❌ loadSavedRecommendations: User not authenticated');
         savedRecommendations.value = [];
-        return;
+        return [];
       }
 
-      // TODO: This is a mock implementation. Update to fetch from Supabase.
-      console.log('Mock loading saved recommendations...');
-      return savedRecommendations.value;
+      console.log('🔄 loadSavedRecommendations: User authenticated, trying Supabase...');
+      console.log('🔄 loadSavedRecommendations: User ID:', user.value.id);
+
+      // Try to load from Supabase first
+      try {
+        console.log('🔄 loadSavedRecommendations: Making Supabase query...');
+        const { data, error } = await supabase
+          .from('saved_recommendations')
+          .select('*')
+          .eq('user_id', user.value.id)
+          .order('created_at', { ascending: false });
+
+        console.log('🔄 loadSavedRecommendations: Supabase response:', { data, error });
+
+        if (error) throw error;
+
+        // Flatten the data structure for UI compatibility
+        const flattenedData = (data || []).map(item => ({
+          id: item.id,
+          name: item.recommendation_data?.name || item.recommendation_data?.title || 'Unnamed Recommendation',
+          description: item.recommendation_data?.description || item.recommendation_data?.summary || 'No description available',
+          category: item.category,
+          match: item.recommendation_data?.match || item.recommendation_data?.score || 85,
+          ...item.recommendation_data // Include all original data
+        }));
+        
+        savedRecommendations.value = flattenedData;
+        console.log('Loaded saved recommendations from Supabase:', flattenedData.length);
+        return savedRecommendations.value;
+      } catch (supabaseError) {
+        console.warn('Supabase load failed, trying localStorage:', supabaseError);
+        
+        // Fallback to localStorage
+        const localRecommendations = JSON.parse(localStorage.getItem('savedRecommendations') || '[]');
+        
+        // Flatten the localStorage data structure for UI compatibility
+        const flattenedLocalData = localRecommendations.map(item => ({
+          id: item.id,
+          name: item.recommendation_data?.name || item.recommendation_data?.title || item.name || 'Unnamed Recommendation',
+          description: item.recommendation_data?.description || item.recommendation_data?.summary || item.description || 'No description available',
+          category: item.category,
+          match: item.recommendation_data?.match || item.recommendation_data?.score || item.match || 85,
+          ...item.recommendation_data // Include all original data
+        }));
+        
+        savedRecommendations.value = flattenedLocalData;
+        console.log('Loaded saved recommendations from localStorage:', flattenedLocalData.length);
+        return savedRecommendations.value;
+      }
 
     } catch (error) {
       console.error('Error loading saved recommendations:', error);
-      throw error;
+      savedRecommendations.value = [];
+      return [];
     }
   }
 
@@ -1233,7 +1309,8 @@ export const useTasteStore = defineStore('taste', () => {
       id: userData.id,
       email: userData.email,
       name: userData.user_metadata?.full_name || userData.user_metadata?.name || userData.email.split('@')[0],
-      avatar_url: userData.user_metadata?.avatar_url
+      avatar_url: userData.user_metadata?.avatar_url,
+      user_metadata: userData.user_metadata || {}
     };
     
     // Load user data
@@ -1241,6 +1318,23 @@ export const useTasteStore = defineStore('taste', () => {
     await loadSavedRecommendations();
     
     return user.value;
+  }
+
+  // Refresh current user data
+  async function refreshUser() {
+    try {
+      const { data: { user: currentUser }, error } = await supabase.auth.getUser();
+      if (error) throw error;
+      
+      if (currentUser) {
+        await setUser(currentUser);
+      }
+      
+      return currentUser;
+    } catch (error) {
+      console.error('Error refreshing user:', error);
+      throw error;
+    }
   }
   
   // Update user profile data
@@ -1250,6 +1344,31 @@ export const useTasteStore = defineStore('taste', () => {
       username: username,
       name: fullName, // Keep 'name' consistent with 'full_name'
     };
+    try {
+      const { data, error } = await supabase.auth.updateUser({ data: metadata });
+      if (error) throw error;
+      await setUser(data.user);
+      return data.user;
+    } catch (error) {
+      console.error('Error updating user profile:', error);
+      throw error;
+    }
+  }
+
+  // Update comprehensive user profile data
+  async function updateUserProfileComplete(profileData) {
+    const metadata = {
+      full_name: profileData.fullName,
+      display_name: profileData.displayName,
+      bio: profileData.bio,
+      favorite_categories: profileData.favoriteCategories,
+      exploration_style: profileData.explorationStyle,
+      is_public: profileData.isPublic,
+      show_achievements: profileData.showAchievements,
+      track_activity: profileData.trackActivity,
+      updated_at: new Date().toISOString()
+    };
+    
     try {
       const { data, error } = await supabase.auth.updateUser({ data: metadata });
       if (error) throw error;
@@ -1449,8 +1568,10 @@ export const useTasteStore = defineStore('taste', () => {
     deleteProfile,
     deleteSavedRecommendation,
     setUser,
+    refreshUser,
     logout,
     updateUserProfile,
+    updateUserProfileComplete,
     updateUserPassword,
     getUserStats,
     searchProfiles,

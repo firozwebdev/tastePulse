@@ -19,8 +19,8 @@ const routes = [
   {
     path: '/profile',
     name: 'Profile',
-    component: () => import('../views/Profile.vue'),
-    meta: { title: 'Your Taste Profile - TastePulse', requiresAuth: true }
+    component: () => import('../views/ProfileEnhanced.vue'),
+    meta: { title: 'Your Cultural Profile - TastePulse', requiresAuth: true }
   },
   {
     path: '/about',

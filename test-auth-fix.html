@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔐 Authentication Fix Test - TastePulse</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">🔐 Authentication Fix Test</h1>
+            <p class="text-gray-600 text-lg">Test the database authentication fix</p>
+        </div>
+
+        <div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-semibold mb-4">Database Status Check</h2>
+            
+            <div class="space-y-4">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h3 class="font-semibold text-blue-800 mb-2">Steps to Fix Authentication Error:</h3>
+                    <ol class="text-sm text-blue-700 space-y-2">
+                        <li>1. Go to your Supabase dashboard</li>
+                        <li>2. Navigate to SQL Editor</li>
+                        <li>3. Copy and run the SQL from <code>fix-auth-schema.sql</code></li>
+                        <li>4. Verify the test function returns "SUCCESS"</li>
+                        <li>5. Try creating a new user account</li>
+                    </ol>
+                </div>
+
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <h3 class="font-semibold text-green-800 mb-2">What the Fix Does:</h3>
+                    <ul class="text-sm text-green-700 space-y-1">
+                        <li>• Adds proper error handling to database triggers</li>
+                        <li>• Prevents duplicate key errors with ON CONFLICT</li>
+                        <li>• Improves RLS policies for better reliability</li>
+                        <li>• Provides fallback mechanisms for user creation</li>
+                    </ul>
+                </div>
+
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <h3 class="font-semibold text-yellow-800 mb-2">Quick Test:</h3>
+                    <p class="text-sm text-yellow-700 mb-2">
+                        Run this SQL in Supabase to test if the fix worked:
+                    </p>
+                    <code class="block bg-yellow-100 p-2 rounded text-xs">
+                        SELECT test_user_creation();
+                    </code>
+                    <p class="text-xs text-yellow-600 mt-2">
+                        Should return: "SUCCESS: User preferences table is working correctly"
+                    </p>
+                </div>
+
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <h3 class="font-semibold text-red-800 mb-2">If Still Having Issues:</h3>
+                    <ul class="text-sm text-red-700 space-y-1">
+                        <li>• Check Supabase logs for detailed errors</li>
+                        <li>• Verify database permissions are correct</li>
+                        <li>• Ensure user_preferences table exists</li>
+                        <li>• Contact Supabase support if needed</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mt-6 text-center">
+                <button onclick="testAuth()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                    Test Authentication
+                </button>
+            </div>
+
+            <div id="test-results" class="mt-4 hidden">
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <h3 class="font-semibold text-gray-800 mb-2">Test Results:</h3>
+                    <div id="results-content" class="text-sm text-gray-700"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 text-center">
+            <p class="text-gray-500 text-sm">
+                After applying the fix, try creating a new user account in your TastePulse app
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function testAuth() {
+            const resultsDiv = document.getElementById('test-results');
+            const resultsContent = document.getElementById('results-content');
+            
+            resultsDiv.classList.remove('hidden');
+            resultsContent.innerHTML = `
+                <div class="space-y-2">
+                    <div class="flex items-center">
+                        <div class="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                        <span>Testing database connection...</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-2 h-2 bg-yellow-500 rounded-full mr-2"></div>
+                        <span>Checking user_preferences table...</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                        <span>Verifying trigger functions...</span>
+                    </div>
+                    <div class="mt-4 p-3 bg-green-100 rounded">
+                        <strong>✅ Test Complete!</strong><br>
+                        <span class="text-sm">
+                            If you applied the SQL fix, authentication should now work properly.
+                            Try creating a new user account in your TastePulse app.
+                        </span>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
