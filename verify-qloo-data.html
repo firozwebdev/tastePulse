@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,19 +10,30 @@
         .success-animation {
             animation: pulse 2s infinite;
         }
+
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
         }
+
         .feature-card {
             transition: all 0.3s ease;
         }
+
         .feature-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
+
 <body class="bg-gradient-to-br from-purple-50 to-blue-50 min-h-screen">
     <div class="container mx-auto px-4 py-8">
         <!-- Header -->
@@ -49,7 +61,8 @@
                     </div>
                 </div>
                 <div id="bridging-status" class="text-gray-500">Testing...</div>
-                <button onclick="testTasteBridging()" class="mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg transition-colors">
+                <button onclick="testTasteBridging()"
+                    class="mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg transition-colors">
                     Test Feature
                 </button>
             </div>
@@ -64,7 +77,8 @@
                     </div>
                 </div>
                 <div id="timetravel-status" class="text-gray-500">Testing...</div>
-                <button onclick="testTimeTravel()" class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors">
+                <button onclick="testTimeTravel()"
+                    class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors">
                     Test Feature
                 </button>
             </div>
@@ -79,7 +93,8 @@
                     </div>
                 </div>
                 <div id="analytics-status" class="text-gray-500">Testing...</div>
-                <button onclick="testAnalytics()" class="mt-4 w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors">
+                <button onclick="testAnalytics()"
+                    class="mt-4 w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors">
                     Test Feature
                 </button>
             </div>
@@ -91,7 +106,8 @@
                 🚀 Full Integration Test
             </h2>
             <div class="text-center mb-6">
-                <button onclick="runFullIntegrationTest()" class="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-3 rounded-lg font-semibold text-lg transition-all transform hover:scale-105">
+                <button onclick="runFullIntegrationTest()"
+                    class="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-3 rounded-lg font-semibold text-lg transition-all transform hover:scale-105">
                     Run Complete Test Suite
                 </button>
             </div>
@@ -120,7 +136,8 @@
         </div>
 
         <!-- Success Celebration -->
-        <div id="success-celebration" class="hidden bg-gradient-to-r from-green-400 to-blue-500 rounded-xl shadow-lg p-8 text-center text-white">
+        <div id="success-celebration"
+            class="hidden bg-gradient-to-r from-green-400 to-blue-500 rounded-xl shadow-lg p-8 text-center text-white">
             <div class="text-6xl mb-4 success-animation">🎉</div>
             <h2 class="text-3xl font-bold mb-4">Congratulations!</h2>
             <p class="text-xl mb-6">All TastePulse enhanced features are working perfectly!</p>
@@ -154,7 +171,7 @@
                 },
                 {
                     id: 2,
-                    name: "Kind of Blue by Miles Davis", 
+                    name: "Kind of Blue by Miles Davis",
                     description: "Legendary jazz album that defined cool jazz",
                     match: 88,
                     category: "music",
@@ -211,7 +228,7 @@
                 statusElement.innerHTML = '<span class="text-red-600 font-semibold">❌ Error</span>';
                 testResults[feature] = false;
             }
-            
+
             checkAllTests();
         }
 
@@ -235,14 +252,14 @@
                 });
 
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                
+
                 const data = await response.json();
                 const endTime = performance.now();
                 const duration = Math.round(endTime - startTime);
-                
+
                 updateStatus('bridging', true, duration);
                 console.log('Taste Bridging Success:', data);
-                
+
             } catch (error) {
                 updateStatus('bridging', false);
                 console.error('Taste Bridging Error:', error);
@@ -262,14 +279,14 @@
                 });
 
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                
+
                 const data = await response.json();
                 const endTime = performance.now();
                 const duration = Math.round(endTime - startTime);
-                
+
                 updateStatus('timetravel', true, duration);
                 console.log('Time Travel Success:', data);
-                
+
             } catch (error) {
                 updateStatus('timetravel', false);
                 console.error('Time Travel Error:', error);
@@ -289,14 +306,14 @@
                 });
 
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                
+
                 const data = await response.json();
                 const endTime = performance.now();
                 const duration = Math.round(endTime - startTime);
-                
+
                 updateStatus('analytics', true, duration);
                 console.log('Analytics Success:', data);
-                
+
             } catch (error) {
                 updateStatus('analytics', false);
                 console.error('Analytics Error:', error);
@@ -306,22 +323,22 @@
         async function runFullIntegrationTest() {
             const resultsDiv = document.getElementById('integration-results');
             resultsDiv.innerHTML = '<div class="text-center"><div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div><p class="mt-2 text-gray-600">Running integration tests...</p></div>';
-            
+
             const startTime = performance.now();
-            
+
             // Run all tests in parallel
             await Promise.all([
                 testTasteBridging(),
-                testTimeTravel(), 
+                testTimeTravel(),
                 testAnalytics()
             ]);
-            
+
             const endTime = performance.now();
             const totalTime = Math.round(endTime - startTime);
-            
+
             const allPassed = Object.values(testResults).every(result => result === true);
             const passedCount = Object.values(testResults).filter(result => result === true).length;
-            
+
             resultsDiv.innerHTML = `
                 <div class="bg-${allPassed ? 'green' : 'yellow'}-50 border border-${allPassed ? 'green' : 'yellow'}-200 rounded-lg p-6">
                     <div class="text-center mb-4">
@@ -360,4 +377,5 @@
         });
     </script>
 </body>
+
 </html>
