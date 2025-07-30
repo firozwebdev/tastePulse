@@ -1,5 +1,12 @@
 <template>
   <div class="min-h-screen">
+    <!-- Hackathon Showcase -->
+    <section class="py-8 px-4">
+      <div class="max-w-6xl mx-auto">
+        <HackathonShowcase />
+      </div>
+    </section>
+
     <!-- Hero Section -->
     <section class="py-12 md:py-20 px-4">
       <div class="max-w-4xl mx-auto text-center">
@@ -409,6 +416,7 @@ import TasteAnalyzer from '../components/TasteAnalyzer.vue';
 import TasteDnaChart from '../components/TasteDnaChart.vue';
 import RecommendationCard from '../components/RecommendationCard.vue';
 import LoadingSpinner from '../components/LoadingSpinner.vue';
+import HackathonShowcase from '../components/HackathonShowcase.vue';
 
 const router = useRouter();
 const tasteStore = useTasteStore();
