@@ -192,6 +192,18 @@ function processQlooSearchResults(qlooData, category, originalQuery) {
 
   console.log(`[Qloo] Processing ${qlooData.results.length} results for ${category}:`, qlooData.results.slice(0, 3));
 
+  // DUPLICATE REMOVAL: Track seen names to prevent duplicates
+  const seenNames = new Set();
+  const uniqueResults = qlooData.results.filter(item => {
+    const uniqueKey = `${item.name?.toLowerCase()}-${category}`;
+    if (seenNames.has(uniqueKey)) {
+      console.log(`🔄 Removing duplicate: ${item.name} (${category})`);
+      return false;
+    }
+    seenNames.add(uniqueKey);
+    return true;
+  });
+
   const results = qlooData.results.slice(0, 6).map((item, index) => {
     // Extract rich data from Qloo response
     const properties = item.properties || {};
