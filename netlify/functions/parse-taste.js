@@ -1,9 +1,24 @@
 const fetch = require('node-fetch');
 
+// Input sanitization function
+function sanitizeInput(input) {
+  if (typeof input !== 'string') return '';
+  return input
+    .replace(/[<>]/g, '') // Remove potential HTML tags
+    .replace(/javascript:/gi, '') // Remove javascript: protocol
+    .replace(/on\w+=/gi, '') // Remove event handlers
+    .replace(/\0/g, '') // Remove null bytes
+    .trim()
+    .substring(0, 5000); // Limit length to prevent DoS
+}
+
 // 🏆 CONTEST-WINNING INTELLIGENT FALLBACK PARSER
 function intelligentFallbackParsing(input) {
   console.log("🧠 INTELLIGENT FALLBACK PARSING - Contest Mode Activated");
-  console.log("Input:", input);
+  
+  // Sanitize input first
+  const sanitizedInput = sanitizeInput(input);
+  console.log("Sanitized Input Length:", sanitizedInput.length);
 
   // CRITICAL: Use the EXACT same structure as Gemini for consistency
   const result = {
@@ -250,12 +265,20 @@ function extractJsonFromGeminiResponse(text) {
 }
 
 exports.handler = async function (event) {
-  // CORS headers
+  // Security headers with CORS
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
+    // Security headers
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "X-XSS-Protection": "1; mode=block",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+    "Pragma": "no-cache",
+    "Expires": "0"
   };
 
   // Handle CORS preflight
@@ -272,13 +295,53 @@ exports.handler = async function (event) {
   }
 
   try {
-    const { input } = JSON.parse(event.body);
-
-    if (!input) {
+    // Input validation and sanitization
+    if (!event.body) {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: "Missing input text" })
+        body: JSON.stringify({ error: "Request body is required" })
+      };
+    }
+
+    // Limit request body size (1MB max)
+    if (event.body.length > 1024 * 1024) {
+      return {
+        statusCode: 413,
+        headers,
+        body: JSON.stringify({ error: "Request body too large" })
+      };
+    }
+
+    let requestData;
+    try {
+      requestData = JSON.parse(event.body);
+    } catch (parseError) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: "Invalid JSON format" })
+      };
+    }
+
+    const { input } = requestData;
+
+    if (!input || typeof input !== 'string') {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: "Missing or invalid input text" })
+      };
+    }
+
+    // Sanitize input to prevent injection attacks
+    const sanitizedInput = sanitizeInput(input);
+    
+    if (sanitizedInput.length === 0) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: "Input text is empty after sanitization" })
       };
     }
 

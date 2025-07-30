@@ -328,12 +328,20 @@ function generateMockData(category, query) {
 exports.handler = async function(event, context) {
   console.log('🎯 Fixed Qloo recommendations handler called');
 
-  // CORS headers
+  // Security headers with CORS
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
+    // Security headers
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "X-XSS-Protection": "1; mode=block",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+    "Pragma": "no-cache",
+    "Expires": "0"
   };
 
   // Handle CORS preflight
@@ -350,7 +358,36 @@ exports.handler = async function(event, context) {
   }
 
   try {
-    const { parsedTaste } = JSON.parse(event.body);
+    // Input validation and sanitization
+    if (!event.body) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: "Request body is required" })
+      };
+    }
+
+    // Limit request body size (1MB max)
+    if (event.body.length > 1024 * 1024) {
+      return {
+        statusCode: 413,
+        headers,
+        body: JSON.stringify({ error: "Request body too large" })
+      };
+    }
+
+    let requestData;
+    try {
+      requestData = JSON.parse(event.body);
+    } catch (parseError) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: "Invalid JSON format" })
+      };
+    }
+
+    const { parsedTaste } = requestData;
     
     if (!parsedTaste || typeof parsedTaste !== 'object') {
       return {
@@ -358,6 +395,17 @@ exports.handler = async function(event, context) {
         headers,
         body: JSON.stringify({ error: "Invalid parsedTaste object" })
       };
+    }
+
+    // Sanitize input to prevent injection attacks
+    function sanitizeString(str) {
+      if (typeof str !== 'string') return '';
+      return str
+        .replace(/[<>]/g, '') // Remove potential HTML tags
+        .replace(/javascript:/gi, '') // Remove javascript: protocol
+        .replace(/on\w+=/gi, '') // Remove event handlers
+        .trim()
+        .substring(0, 500); // Limit length
     }
 
     console.log('[Debug] Processing parsed taste:', parsedTaste);
