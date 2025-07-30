@@ -336,8 +336,8 @@ function generateMockRecommendations(category, taste) {
 const realApi = {
   async parseText(input) {
     try {
-      console.log('Calling simple parse-taste API with input:', input);
-      const response = await api.post('/.netlify/functions/parse-taste-simple', { input });
+      console.log('Calling Gemini-powered parse-taste API with input:', input);
+      const response = await api.post('/.netlify/functions/parse-taste', { input });
       console.log('Parse-taste API response:', response.data);
       return { data: response.data };
     } catch (error) {
