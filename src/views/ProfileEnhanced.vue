@@ -136,7 +136,7 @@
               <div v-for="(score, dimension) in personalityScores" :key="dimension" class="space-y-2">
                 <div class="flex justify-between text-sm">
                   <span class="font-medium text-gray-700 dark:text-gray-300 capitalize">{{ dimension.replace('_', ' ')
-                    }}</span>
+                  }}</span>
                   <span class="text-gray-600 dark:text-gray-400">{{ Math.abs(score) }}%</span>
                 </div>
                 <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -255,17 +255,15 @@
             </div>
           </div>
         </div>
-        
+
         <div v-if="savedProfiles.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <div 
-            v-for="profile in savedProfiles" 
-            :key="profile.id"
+          <div v-for="profile in savedProfiles" :key="profile.id"
             class="group bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl p-6 border border-purple-200 dark:border-purple-800 hover:shadow-lg transition-all cursor-pointer transform hover:scale-105"
-            @click="viewTasteProfile(profile)"
-          >
+            @click="viewTasteProfile(profile)">
             <div class="flex items-start justify-between mb-4">
               <div class="flex-1">
-                <h4 class="font-bold text-gray-900 dark:text-white mb-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                <h4
+                  class="font-bold text-gray-900 dark:text-white mb-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                   {{ profile.name }}
                 </h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
@@ -274,39 +272,32 @@
               </div>
               <div class="text-2xl ml-3">🎨</div>
             </div>
-            
+
             <!-- Profile Stats -->
             <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-3">
               <span>{{ formatDate(profile.created_at) }}</span>
               <span>{{ Object.keys(profile.recommendations || {}).length }} categories</span>
             </div>
-            
+
             <!-- Categories Preview -->
             <div class="flex flex-wrap gap-1">
-              <span 
-                v-for="category in Object.keys(profile.parsed_taste || {}).slice(0, 3)" 
-                :key="category"
-                class="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full text-xs font-medium"
-              >
+              <span v-for="category in Object.keys(profile.parsed_taste || {}).slice(0, 3)" :key="category"
+                class="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full text-xs font-medium">
                 {{ category }}
               </span>
-              <span 
-                v-if="Object.keys(profile.parsed_taste || {}).length > 3"
-                class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full text-xs"
-              >
+              <span v-if="Object.keys(profile.parsed_taste || {}).length > 3"
+                class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full text-xs">
                 +{{ Object.keys(profile.parsed_taste || {}).length - 3 }}
               </span>
             </div>
           </div>
         </div>
-        
+
         <div v-else class="text-center py-12">
           <div class="text-6xl mb-4">🎭</div>
           <p class="text-gray-600 dark:text-gray-400 mb-4">No taste profiles created yet</p>
-          <router-link 
-            to="/" 
-            class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors inline-block"
-          >
+          <router-link to="/"
+            class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors inline-block">
             Create Your First Profile
           </router-link>
         </div>
@@ -888,6 +879,7 @@ const router = useRouter();
 const userPersonality = ref(null);
 const personalityScores = ref({});
 const savedRecommendations = ref([]);
+const savedProfiles = ref([]);
 const recentActivities = ref([]);
 const achievements = ref([]);
 const isLoading = ref(false);
@@ -1220,6 +1212,12 @@ function viewRecommendation(item) {
   showRecommendationModal.value = true;
 }
 
+function viewTasteProfile(profile) {
+  // Load the profile and navigate to results page
+  tasteStore.loadProfile(profile);
+  router.push('/results');
+}
+
 function closeRecommendationModal() {
   showRecommendationModal.value = false;
   selectedRecommendation.value = null;
@@ -1293,40 +1291,29 @@ async function initializeProfileData() {
   console.log('🚀 ProfileEnhanced: User authenticated?', tasteStore.isAuthenticated);
   console.log('🚀 ProfileEnhanced: Current user:', tasteStore.user);
 
-  // Load saved recommendations from store
   try {
-    console.log('🚀 ProfileEnhanced: Calling loadSavedRecommendations...');
-    await tasteStore.loadSavedRecommendations();
+    // Load saved taste profiles
+    console.log('🚀 ProfileEnhanced: Loading saved profiles...');
+    await tasteStore.loadSavedProfiles();
+    savedProfiles.value = tasteStore.savedProfiles || [];
+    console.log('� ProfilleEnhanced: Loaded profiles:', savedProfiles.value.length);
 
-    console.log('🚀 ProfileEnhanced: tasteStore.savedRecommendations:', tasteStore.savedRecommendations);
-    console.log('🚀 ProfileEnhanced: Raw array length:', tasteStore.savedRecommendations?.length);
-    console.log('🚀 ProfileEnhanced: All items:', tasteStore.savedRecommendations);
-
-    savedRecommendations.value = tasteStore.savedRecommendations || [];
-
-    console.log('🔍 ProfileEnhanced: Final savedRecommendations.value:', savedRecommendations.value);
-    console.log('🔍 ProfileEnhanced: Final length:', savedRecommendations.value.length);
-
-    // Log each recommendation individually
-    savedRecommendations.value.forEach((item, index) => {
-      console.log(`🔍 ProfileEnhanced: Recommendation ${index + 1}:`, {
-        id: item.id,
-        name: item.name,
-        category: item.category,
-        match: item.match
+    // Log each profile individually
+    savedProfiles.value.forEach((profile, index) => {
+      console.log(`🔍 ProfileEnhanced: Profile ${index + 1}:`, {
+        id: profile.id,
+        name: profile.name,
+        taste_input: profile.taste_input?.substring(0, 50) + '...',
+        categories: Object.keys(profile.parsed_taste || {}).length,
+        recommendations: Object.keys(profile.recommendations || {}).length
       });
     });
 
-    if (savedRecommendations.value.length === 0) {
-      console.log('❌ ProfileEnhanced: No saved recommendations found');
-
-      // Check localStorage directly
-      const localStorageData = localStorage.getItem('savedRecommendations');
-      console.log('🔍 ProfileEnhanced: Raw localStorage data:', localStorageData);
-
-      const tasteProfiles = localStorage.getItem('tasteProfiles');
-      console.log('🔍 ProfileEnhanced: Raw tasteProfiles data:', tasteProfiles);
-    }
+    // Load saved recommendations
+    console.log('🚀 ProfileEnhanced: Loading saved recommendations...');
+    await tasteStore.loadSavedRecommendations();
+    savedRecommendations.value = tasteStore.savedRecommendations || [];
+    console.log('🔍 ProfileEnhanced: Loaded recommendations:', savedRecommendations.value.length);
   } catch (error) {
     console.error('❌ ProfileEnhanced: Error loading saved recommendations:', error);
     savedRecommendations.value = [];
