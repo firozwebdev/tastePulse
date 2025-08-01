@@ -420,6 +420,7 @@ import HackathonShowcase from '../components/HackathonShowcase.vue';
 
 const router = useRouter();
 const tasteStore = useTasteStore();
+const notification = useNotification();
 const tasteInput = ref('');
 const isLoading = ref(false);
 
@@ -508,6 +509,12 @@ async function submitTaste() {
   try {
     // Call the store action to process the taste input
     await tasteStore.processInput(tasteInput.value);
+    
+    // Show success toast message
+    notification.success(
+      'Taste Analysis Complete! 🎉', 
+      'Your personalized recommendations are ready. Discover what matches your unique taste profile!'
+    );
     
     // Navigate to the results page
     router.push('/results');

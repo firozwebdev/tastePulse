@@ -198,6 +198,7 @@
 import { computed } from 'vue';
 import { useNotification } from '../composables/useNotification';
 import { useTasteStore } from '../stores/taste';
+import { getFallbackImage } from '../utils/helpers';
 import BaseButton from './BaseButton.vue';
 
 const props = defineProps({
@@ -223,18 +224,6 @@ function handleBackdropClick() {
 
 function handleImageError(event) {
   event.target.src = getFallbackImage(props.recommendation.category?.toLowerCase());
-}
-
-function getFallbackImage(category) {
-  const fallbacks = {
-    music: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&h=300&auto=format&fit=crop',
-    food: 'https://images.unsplash.com/photo-1557872943-16a5ac26437e?w=400&h=300&auto=format&fit=crop',
-    book: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=300&auto=format&fit=crop',
-    travel: 'https://images.unsplash.com/photo-1492571350019-22de08371fd3?w=400&h=300&auto=format&fit=crop',
-    fashion: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400&h=300&auto=format&fit=crop',
-    brand: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=400&h=300&auto=format&fit=crop'
-  };
-  return fallbacks[category] || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&h=300&auto=format&fit=crop';
 }
 
 function getMatchBadgeClass(match) {
